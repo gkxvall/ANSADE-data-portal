@@ -20,7 +20,7 @@ The project is not a clone of the current portal. It is a new visualization and 
 - Every stage must end with working, testable code and updated documentation.
 - The `Inso` folder contains visual inspiration only. It must guide the design without being copied literally.
 
-# Stage 1 — Foundation and Project Setup
+## Stage 1 — Foundation and Project Setup
 
 Create a production-quality Next.js project using TypeScript, the App Router, PostgreSQL, Prisma, Tailwind CSS, ESLint, Prettier, and Vitest.
 
@@ -39,7 +39,7 @@ Deliverables:
 - Updated README
 - Stage report
 
-# Stage 2 — Domain Model and Database Schema
+## Stage 2 — Domain Model and Database Schema
 
 Define a stable internal domain model that is independent of both static files and any future external API.
 
@@ -69,7 +69,7 @@ Deliverables:
 - Mapping rules between database and domain models
 - Database relationship documentation
 
-# Stage 3 — Source Importer and Static Snapshot Pipeline
+## Stage 3 — Source Importer and Static Snapshot Pipeline
 
 Build an importer that retrieves or consumes exported ANSADE portal data and transforms it into the internal model.
 
@@ -101,7 +101,7 @@ Deliverables:
 - Sample imported dataset
 - Import documentation
 
-# Stage 4 — Repository and Provider Abstraction
+## Stage 4 — Repository and Provider Abstraction
 
 Create interfaces that isolate the application from the storage source.
 
@@ -140,7 +140,7 @@ Deliverables:
 - Unit tests for repository behavior
 - Architecture rule preventing direct data access from UI components
 
-# Stage 5 — Catalogue, Navigation, and Search
+## Stage 5 — Catalogue, Navigation, and Search
 
 Build the complete browsing hierarchy:
 
@@ -171,7 +171,7 @@ Deliverables:
 - Breadcrumb navigation
 - Responsive catalogue cards and tables
 
-# Stage 6 — Interactive Dataset Explorer
+## Stage 6 — Interactive Dataset Explorer
 
 Create the main dataset workspace.
 
@@ -200,7 +200,7 @@ Deliverables:
 - Large-data handling
 - Dataset metadata panel
 
-# Stage 7 — Visualizations and Comparisons
+## Stage 7 — Visualizations and Comparisons
 
 Add reusable visualizations generated from the normalized observation model.
 
@@ -227,7 +227,7 @@ Deliverables:
 - Accessible legends and tooltips
 - PNG and SVG export where supported
 
-# Stage 8 — Exports, Saved Views, and User Productivity
+## Stage 8 — Exports, Saved Views, and User Productivity
 
 Add tools that make the portal useful for analysts and decision-makers.
 
@@ -255,7 +255,7 @@ Deliverables:
 - Share links
 - Print-friendly layouts
 
-# Stage 9 — Administration, Import Monitoring, and Data Quality
+## Stage 9 — Administration, Import Monitoring, and Data Quality
 
 Build an internal administration area for monitoring the static snapshot and future synchronization process.
 
@@ -283,7 +283,7 @@ Deliverables:
 - Safe manual import action
 - Health endpoint
 
-# Stage 10 — Production Hardening and API Migration Readiness
+## Stage 10 — Production Hardening and API Migration Readiness
 
 Prepare the project for deployment and future live API integration.
 
@@ -314,7 +314,7 @@ Deliverables:
 - API migration runbook
 - Final project report
 
-# Expected Final Result
+## Expected Final Result
 
 The completed system will be a modern ANSADE statistical intelligence portal with:
 

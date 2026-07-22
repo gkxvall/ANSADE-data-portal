@@ -248,3 +248,13 @@ Mitigation:
 - prefer stable parent source IDs rather than labels
 - preserve fixtures for every discovered source-scoping rule
 - never expose scope construction to UI or domain services
+
+## 24. Prisma CLI and Workspace Diagnostics Disagree on Datasource URLs
+
+The installed Prisma 6 CLI validates the schema only when `DATABASE_URL` is available in the execution environment, while the workspace diagnostic currently flags the schema datasource URL as unsupported.
+
+Mitigation:
+
+- keep the datasource URL in `prisma/schema.prisma` for CLI compatibility
+- provide `DATABASE_URL` in local or CI environments before running Prisma commands
+- treat the workspace diagnostic as a tooling warning unless the Prisma toolchain is upgraded end-to-end

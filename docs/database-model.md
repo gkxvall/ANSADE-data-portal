@@ -80,16 +80,20 @@ External names such as `nom_cat` or `nom_theme` are forbidden outside future ada
 
 ## Prisma-to-domain mapping rules
 
+<!-- markdownlint-disable MD060 -->
+
 | Prisma/database representation  | Domain representation              | Mapping rule                                                   |
 | ------------------------------- | ---------------------------------- | -------------------------------------------------------------- |
 | UUID string                     | `string` internal ID               | Return unchanged                                               |
 | Prisma enum                     | string-literal union               | Map exhaustively; unknown enum members are errors              |
-| `Decimal(30,10)`                | `number                            | null`                                                          | Convert only after finite/range/precision checks           |
+| `Decimal(30,10)`                | number or null                                                      | Convert only after finite/range/precision checks           |
 | JSONB coordinate                | `Readonly<Record<string, string>>` | Validate keys and values before returning                      |
 | JSONB metadata/summary/snapshot | readonly record                    | Validate object shape; never expose mutable Prisma JSON values |
-| nullable database value         | `T                                 | null`                                                          | Normalize `undefined` to `null` at the repository boundary |
-| source timestamps               | `Date                              | null`                                                          | Preserve exactly; do not substitute `updatedAt`            |
+| nullable database value         | T or null                                                           | Normalize `undefined` to `null` at the repository boundary |
+| source timestamps               | Date or null                                                        | Preserve exactly; do not substitute `updatedAt`            |
 | source-reference target columns | `entityId`                         | Select the one non-null target required by the SQL check       |
+
+<!-- markdownlint-enable MD060 -->
 
 Concrete mapper implementations belong to the PostgreSQL provider in Stage 4. They are not added to presentation or domain code in Stage 2.
 
