@@ -153,3 +153,98 @@ Mitigation:
 - abstract persistence
 - avoid coupling saved views directly to browser APIs
 - prepare a future account-backed repository
+
+## 15. No Verified PostgreSQL Instance in Stage 2
+
+The source-ID-preserving schema, migration, and development seed now exist, but no real isolated PostgreSQL credentials were available in this development session.
+
+Mitigation:
+
+- keep credentials in ignored local environment files
+- use placeholders only in `.env.example`
+- apply the committed migration to a disposable local/test PostgreSQL instance before using the seed
+- run database integration tests when an isolated `DATABASE_URL` is supplied
+- do not report database readiness before a verified connection is available
+
+## 16. Health Endpoint Is Liveness-Only
+
+`/api/health` confirms that the Next.js process is responding but returns `database: "not-checked"`.
+
+Mitigation:
+
+- keep the response explicit so it cannot be mistaken for database readiness
+- add a database-backed readiness check when deployment health behavior is implemented
+- avoid exposing connection details in health responses
+
+## 17. Browser Verification Depends on the Execution Environment
+
+The Stage 1 Playwright smoke suite is configured, but the current Codex session did not expose an in-app browser surface, so visual and browser runtime checks could not execute here.
+
+Mitigation:
+
+- keep desktop and mobile Playwright coverage in `e2e/foundation.spec.ts`
+- run `npx playwright install chromium` and `npm run test:e2e` in CI or a browser-enabled environment
+- retain unit/component coverage for navigation behavior independently of browser availability
+
+## 18. Inspiration Folder Name Differs from Documentation
+
+The documentation names `Inso/`, while the checked-in directory is `inspo/`.
+
+Mitigation:
+
+- treat the existing lowercase folder as the authoritative reference location for now
+- use consistent casing in a future repository cleanup, particularly for case-sensitive deployment systems
+
+## 19. Patched Transitive Dependency Overrides
+
+The current Next.js and Prisma dependency trees initially resolved transitive packages covered by npm advisories.
+
+Mitigation:
+
+- pin patched `effect`, `postcss`, and `sharp` versions through narrow npm overrides
+- keep `npm audit` at zero known vulnerabilities during dependency updates
+- remove each override after its direct parent package adopts a patched compatible range
+
+## 20. Hybrid Observation Coordinates Require Transactional Consistency
+
+Each observation stores both canonical JSON coordinates and normalized dimension-value links. PostgreSQL validates the relational links and coordinate hash format but cannot prove that the JSON codes describe exactly the same links.
+
+Mitigation:
+
+- generate JSON, links, and the checksum from one normalized coordinate in Stage 3
+- write all coordinate representations in one transaction
+- add importer integrity tests that reconstruct and compare both representations
+- reject duplicate `(datasetId, coordinateHash)` values
+
+## 21. Decimal-to-JavaScript Precision Boundary
+
+PostgreSQL stores observations as `DECIMAL(30,10)`, while the current domain contract exposes `number | null`. Some valid database decimals cannot be represented exactly as JavaScript numbers.
+
+Mitigation:
+
+- always preserve `rawValue`
+- require Stage 4 mappers to check range and precision before conversion
+- surface unsafe conversion as data-quality information rather than silently rounding
+- revisit a decimal-string domain representation if real ANSADE values exceed safe numeric limits
+
+## 22. Prisma Does Not Represent Every PostgreSQL Check
+
+The initial migration contains check constraints for JSON shapes, hashes, source-reference targets, counters, and revision numbers that are not represented directly in `schema.prisma`.
+
+Mitigation:
+
+- keep schema tests that assert the custom constraints remain in the migration
+- review generated migrations for accidental constraint loss
+- use additive SQL migrations for future custom checks
+- document the checks in `docs/database-model.md`
+
+## 23. Source Scope Convention Awaits Real Payloads
+
+`SourceReference.sourceScope` allows identifiers that repeat below a parent, but the exact stable scope format depends on real source payloads.
+
+Mitigation:
+
+- define scope construction inside Stage 3 source adapters
+- prefer stable parent source IDs rather than labels
+- preserve fixtures for every discovered source-scoping rule
+- never expose scope construction to UI or domain services

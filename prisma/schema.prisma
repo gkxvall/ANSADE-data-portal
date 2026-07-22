@@ -1,0 +1,354 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PublicationStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  UNKNOWN
+}
+
+enum DimensionKind {
+  TIME
+  GEOGRAPHY
+  INDICATOR
+  MEASURE
+  CATEGORY
+  OTHER
+}
+
+enum ImportRunStatus {
+  RUNNING
+  SUCCEEDED
+  PARTIAL
+  FAILED
+}
+
+enum ImportIssueSeverity {
+  WARNING
+  ERROR
+}
+
+enum SourceEntityType {
+  CATEGORY
+  THEME
+  DATASET
+  DIMENSION
+  DIMENSION_VALUE
+  OBSERVATION
+  DATASET_METADATA
+}
+
+enum DatasetRevisionKind {
+  CREATED
+  UPDATED
+  DEACTIVATED
+  REACTIVATED
+}
+
+model Category {
+  id                String    @id @default(uuid()) @db.Uuid
+  sourceSystem      String    @map("source_system") @db.VarChar(64)
+  sourceId          String    @map("source_id") @db.VarChar(255)
+  name              String    @db.VarChar(255)
+  slug              String    @db.VarChar(255)
+  displayOrder      Int       @default(0) @map("display_order")
+  isActive          Boolean   @default(true) @map("is_active")
+  sourceUpdatedAt   DateTime? @map("source_updated_at") @db.Timestamptz(3)
+  sourcePublishedAt DateTime? @map("source_published_at") @db.Timestamptz(3)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  themes           Theme[]
+  sourceReferences SourceReference[]
+
+  @@unique([sourceSystem, sourceId], map: "categories_source_identity_key")
+  @@unique([slug], map: "categories_slug_key")
+  @@index([displayOrder], map: "categories_display_order_idx")
+  @@map("categories")
+}
+
+model Theme {
+  id                String    @id @default(uuid()) @db.Uuid
+  categoryId        String    @map("category_id") @db.Uuid
+  sourceSystem      String    @map("source_system") @db.VarChar(64)
+  sourceId          String    @map("source_id") @db.VarChar(255)
+  name              String    @db.VarChar(255)
+  slug              String    @db.VarChar(255)
+  displayOrder      Int       @default(0) @map("display_order")
+  isActive          Boolean   @default(true) @map("is_active")
+  sourceUpdatedAt   DateTime? @map("source_updated_at") @db.Timestamptz(3)
+  sourcePublishedAt DateTime? @map("source_published_at") @db.Timestamptz(3)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  category         Category          @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  datasets         Dataset[]
+  sourceReferences SourceReference[]
+
+  @@unique([sourceSystem, sourceId], map: "themes_source_identity_key")
+  @@unique([categoryId, slug], map: "themes_category_slug_key")
+  @@index([categoryId, displayOrder], map: "themes_category_order_idx")
+  @@map("themes")
+}
+
+model Dataset {
+  id                 String            @id @default(uuid()) @db.Uuid
+  themeId            String            @map("theme_id") @db.Uuid
+  sourceSystem       String            @map("source_system") @db.VarChar(64)
+  sourceId           String            @map("source_id") @db.VarChar(255)
+  title              String            @db.VarChar(500)
+  slug               String            @db.VarChar(255)
+  description        String?           @db.Text
+  sourceOrganization String?           @map("source_organization") @db.VarChar(255)
+  publicationStatus  PublicationStatus @default(UNKNOWN) @map("publication_status")
+  isActive           Boolean           @default(true) @map("is_active")
+  checksum           String?           @db.Char(64)
+  sourceUpdatedAt    DateTime?         @map("source_updated_at") @db.Timestamptz(3)
+  sourcePublishedAt  DateTime?         @map("source_published_at") @db.Timestamptz(3)
+  createdAt          DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  theme            Theme             @relation(fields: [themeId], references: [id], onDelete: Restrict)
+  dimensions       Dimension[]
+  observations     Observation[]
+  metadata         DatasetMetadata?
+  sourceReferences SourceReference[]
+  importIssues     ImportIssue[]
+  revisions        DatasetRevision[]
+
+  @@unique([sourceSystem, sourceId], map: "datasets_source_identity_key")
+  @@unique([themeId, slug], map: "datasets_theme_slug_key")
+  @@index([themeId], map: "datasets_theme_id_idx")
+  @@index([sourceId], map: "datasets_source_id_idx")
+  @@index([sourceUpdatedAt], map: "datasets_source_updated_at_idx")
+  @@index([publicationStatus, isActive], map: "datasets_publication_active_idx")
+  @@map("datasets")
+}
+
+model DatasetMetadata {
+  id                String    @id @default(uuid()) @db.Uuid
+  datasetId         String    @unique(map: "dataset_metadata_dataset_id_key") @map("dataset_id") @db.Uuid
+  unit              String?   @db.VarChar(255)
+  frequency         String?   @db.VarChar(100)
+  methodology       String?   @db.Text
+  coverage          String?   @db.Text
+  limitations       String?   @db.Text
+  contact           String?   @db.VarChar(500)
+  language          String    @default("fr") @db.VarChar(16)
+  additional        Json?     @db.JsonB
+  sourceUpdatedAt   DateTime? @map("source_updated_at") @db.Timestamptz(3)
+  sourcePublishedAt DateTime? @map("source_published_at") @db.Timestamptz(3)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  dataset          Dataset           @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+  sourceReferences SourceReference[]
+
+  @@map("dataset_metadata")
+}
+
+model Dimension {
+  id                String        @id @default(uuid()) @db.Uuid
+  datasetId         String        @map("dataset_id") @db.Uuid
+  sourceId          String        @map("source_id") @db.VarChar(255)
+  key               String        @map("dimension_key") @db.VarChar(100)
+  label             String        @db.VarChar(255)
+  kind              DimensionKind @default(OTHER)
+  position          Int           @default(0)
+  isRequired        Boolean       @default(true) @map("is_required")
+  sourceUpdatedAt   DateTime?     @map("source_updated_at") @db.Timestamptz(3)
+  sourcePublishedAt DateTime?     @map("source_published_at") @db.Timestamptz(3)
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  dataset           Dataset                     @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+  values            DimensionValue[]
+  observationValues ObservationDimensionValue[]
+  sourceReferences  SourceReference[]
+
+  @@unique([datasetId, sourceId], map: "dimensions_dataset_source_id_key")
+  @@unique([datasetId, key], map: "dimensions_dataset_key_key")
+  @@index([datasetId, position], map: "dimensions_dataset_position_idx")
+  @@map("dimensions")
+}
+
+model DimensionValue {
+  id                String    @default(uuid()) @db.Uuid
+  dimensionId       String    @map("dimension_id") @db.Uuid
+  sourceId          String    @map("source_id") @db.VarChar(255)
+  code              String    @db.VarChar(255)
+  label             String    @db.VarChar(500)
+  position          Int       @default(0)
+  isActive          Boolean   @default(true) @map("is_active")
+  sourceUpdatedAt   DateTime? @map("source_updated_at") @db.Timestamptz(3)
+  sourcePublishedAt DateTime? @map("source_published_at") @db.Timestamptz(3)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  dimension         Dimension                   @relation(fields: [dimensionId], references: [id], onDelete: Cascade)
+  observationValues ObservationDimensionValue[]
+  sourceReferences  SourceReference[]
+
+  @@id([id])
+  @@unique([id, dimensionId], map: "dimension_values_id_dimension_id_key")
+  @@unique([dimensionId, sourceId], map: "dimension_values_dimension_source_id_key")
+  @@unique([dimensionId, code], map: "dimension_values_dimension_code_key")
+  @@index([dimensionId, position], map: "dimension_values_dimension_position_idx")
+  @@map("dimension_values")
+}
+
+model Observation {
+  id                String    @id @default(uuid()) @db.Uuid
+  datasetId         String    @map("dataset_id") @db.Uuid
+  sourceId          String?   @map("source_id") @db.VarChar(255)
+  coordinate        Json      @db.JsonB
+  coordinateHash    String    @map("coordinate_hash") @db.Char(64)
+  value             Decimal?  @db.Decimal(30, 10)
+  rawValue          String?   @map("raw_value") @db.Text
+  status            String?   @db.VarChar(100)
+  sourceUpdatedAt   DateTime? @map("source_updated_at") @db.Timestamptz(3)
+  sourcePublishedAt DateTime? @map("source_published_at") @db.Timestamptz(3)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  dataset          Dataset                     @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+  dimensionValues  ObservationDimensionValue[]
+  sourceReferences SourceReference[]
+
+  @@unique([datasetId, coordinateHash], map: "observations_dataset_coordinate_hash_key")
+  @@unique([datasetId, sourceId], map: "observations_dataset_source_id_key")
+  @@index([datasetId], map: "observations_dataset_id_idx")
+  @@index([datasetId, status], map: "observations_dataset_status_idx")
+  @@map("observations")
+}
+
+model ObservationDimensionValue {
+  observationId    String @map("observation_id") @db.Uuid
+  dimensionId      String @map("dimension_id") @db.Uuid
+  dimensionValueId String @map("dimension_value_id") @db.Uuid
+
+  observation    Observation    @relation(fields: [observationId], references: [id], onDelete: Cascade)
+  dimension      Dimension      @relation(fields: [dimensionId], references: [id], onDelete: Restrict)
+  dimensionValue DimensionValue @relation(fields: [dimensionValueId, dimensionId], references: [id, dimensionId], onDelete: Restrict)
+
+  @@id([observationId, dimensionId])
+  @@unique([observationId, dimensionValueId], map: "observation_dimension_values_observation_value_key")
+  @@index([dimensionValueId, observationId], map: "observation_dimension_values_value_observation_idx")
+  @@index([dimensionId], map: "observation_dimension_values_dimension_idx")
+  @@map("observation_dimension_values")
+}
+
+model SourceReference {
+  id                String           @id @default(uuid()) @db.Uuid
+  sourceSystem      String           @map("source_system") @db.VarChar(64)
+  entityType        SourceEntityType @map("entity_type")
+  sourceScope       String           @default("global") @map("source_scope") @db.VarChar(255)
+  sourceId          String           @map("source_id") @db.VarChar(255)
+  sourceUrl         String?          @map("source_url") @db.Text
+  checksum          String?          @db.Char(64)
+  sourceUpdatedAt   DateTime?        @map("source_updated_at") @db.Timestamptz(3)
+  sourcePublishedAt DateTime?        @map("source_published_at") @db.Timestamptz(3)
+  retrievedAt       DateTime         @default(now()) @map("retrieved_at") @db.Timestamptz(3)
+  metadata          Json?            @db.JsonB
+  categoryId        String?          @map("category_id") @db.Uuid
+  themeId           String?          @map("theme_id") @db.Uuid
+  datasetId         String?          @map("dataset_id") @db.Uuid
+  dimensionId       String?          @map("dimension_id") @db.Uuid
+  dimensionValueId  String?          @map("dimension_value_id") @db.Uuid
+  observationId     String?          @map("observation_id") @db.Uuid
+  datasetMetadataId String?          @map("dataset_metadata_id") @db.Uuid
+  createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  category        Category?        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  theme           Theme?           @relation(fields: [themeId], references: [id], onDelete: Cascade)
+  dataset         Dataset?         @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+  dimension       Dimension?       @relation(fields: [dimensionId], references: [id], onDelete: Cascade)
+  dimensionValue  DimensionValue?  @relation(fields: [dimensionValueId], references: [id], onDelete: Cascade)
+  observation     Observation?     @relation(fields: [observationId], references: [id], onDelete: Cascade)
+  datasetMetadata DatasetMetadata? @relation(fields: [datasetMetadataId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceSystem, entityType, sourceScope, sourceId], map: "source_references_identity_key")
+  @@index([categoryId], map: "source_references_category_id_idx")
+  @@index([themeId], map: "source_references_theme_id_idx")
+  @@index([datasetId], map: "source_references_dataset_id_idx")
+  @@index([dimensionId], map: "source_references_dimension_id_idx")
+  @@index([dimensionValueId], map: "source_references_dimension_value_id_idx")
+  @@index([observationId], map: "source_references_observation_id_idx")
+  @@index([datasetMetadataId], map: "source_references_dataset_metadata_id_idx")
+  @@map("source_references")
+}
+
+model ImportRun {
+  id               String          @id @default(uuid()) @db.Uuid
+  sourceSystem     String          @map("source_system") @db.VarChar(64)
+  status           ImportRunStatus @default(RUNNING)
+  strictMode       Boolean         @default(false) @map("strict_mode")
+  startedAt        DateTime        @default(now()) @map("started_at") @db.Timestamptz(3)
+  finishedAt       DateTime?       @map("finished_at") @db.Timestamptz(3)
+  categoriesSeen   Int             @default(0) @map("categories_seen")
+  themesSeen       Int             @default(0) @map("themes_seen")
+  datasetsSeen     Int             @default(0) @map("datasets_seen")
+  observationsSeen Int             @default(0) @map("observations_seen")
+  recordsCreated   Int             @default(0) @map("records_created")
+  recordsUpdated   Int             @default(0) @map("records_updated")
+  recordsFailed    Int             @default(0) @map("records_failed")
+  sourceChecksum   String?         @map("source_checksum") @db.Char(64)
+  summary          Json?           @db.JsonB
+  createdAt        DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  issues    ImportIssue[]
+  revisions DatasetRevision[]
+
+  @@index([sourceSystem, startedAt(sort: Desc)], map: "import_runs_source_started_at_idx")
+  @@index([status, startedAt(sort: Desc)], map: "import_runs_status_started_at_idx")
+  @@map("import_runs")
+}
+
+model ImportIssue {
+  id               String              @id @default(uuid()) @db.Uuid
+  importRunId      String              @map("import_run_id") @db.Uuid
+  datasetId        String?             @map("dataset_id") @db.Uuid
+  severity         ImportIssueSeverity
+  code             String              @db.VarChar(100)
+  message          String              @db.Text
+  sourceEntityType SourceEntityType?   @map("source_entity_type")
+  sourceId         String?             @map("source_id") @db.VarChar(255)
+  details          Json?               @db.JsonB
+  createdAt        DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  importRun ImportRun @relation(fields: [importRunId], references: [id], onDelete: Cascade)
+  dataset   Dataset?  @relation(fields: [datasetId], references: [id], onDelete: SetNull)
+
+  @@index([importRunId, severity], map: "import_issues_run_severity_idx")
+  @@index([datasetId], map: "import_issues_dataset_id_idx")
+  @@map("import_issues")
+}
+
+model DatasetRevision {
+  id              String              @id @default(uuid()) @db.Uuid
+  datasetId       String              @map("dataset_id") @db.Uuid
+  importRunId     String?             @map("import_run_id") @db.Uuid
+  revision        Int
+  kind            DatasetRevisionKind
+  checksum        String              @db.Char(64)
+  snapshot        Json                @db.JsonB
+  sourceUpdatedAt DateTime?           @map("source_updated_at") @db.Timestamptz(3)
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  dataset   Dataset    @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+  importRun ImportRun? @relation(fields: [importRunId], references: [id], onDelete: SetNull)
+
+  @@unique([datasetId, revision], map: "dataset_revisions_dataset_revision_key")
+  @@unique([datasetId, checksum], map: "dataset_revisions_dataset_checksum_key")
+  @@index([importRunId], map: "dataset_revisions_import_run_id_idx")
+  @@index([datasetId, createdAt(sort: Desc)], map: "dataset_revisions_dataset_created_at_idx")
+  @@map("dataset_revisions")
+}

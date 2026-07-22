@@ -1,0 +1,30 @@
+# dependencies
+/node_modules
+
+# Next.js output
+/.next
+/out
+
+# tests and reports
+/coverage
+/playwright-report
+/test-results
+
+# environment files (the documented template is committed)
+.env
+.env.*
+!.env.example
+
+# Prisma local artifacts
+*.db
+*.db-journal
+
+# logs and editor files
+*.log
+.DS_Store
+.idea
+.vscode
+
+# TypeScript cache
+*.tsbuildinfo
+next-env.d.ts
