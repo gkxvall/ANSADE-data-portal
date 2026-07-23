@@ -24,12 +24,23 @@ describe("getServerEnv", () => {
     ).toThrow();
   });
 
-  it("does not accept an API provider before its implementation stage", () => {
+  it("requires an API base URL when the API provider is selected", () => {
     expect(() =>
       getServerEnv({
-        DATABASE_URL: "postgresql://user:password@localhost:5432/ansade",
         DATA_SOURCE: "api",
       }),
     ).toThrow();
+  });
+
+  it("accepts the future API provider configuration", () => {
+    const result = getServerEnv({
+      DATA_SOURCE: "api",
+      ANSADE_API_BASE_URL: "https://api.portail.ansade.mr/api",
+    });
+
+    expect(result.DATA_SOURCE).toBe("api");
+    expect(result.ANSADE_API_BASE_URL).toBe(
+      "https://api.portail.ansade.mr/api",
+    );
   });
 });

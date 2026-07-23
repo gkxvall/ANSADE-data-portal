@@ -5,7 +5,11 @@ import { importStage3Source } from "./importer";
 import { sampleStage3Source } from "./sample-source";
 
 type TestRecord = Record<string, unknown>;
-type RevisionRecord = TestRecord & { datasetId: string; revision: number; checksum: string };
+type RevisionRecord = TestRecord & {
+  datasetId: string;
+  revision: number;
+  checksum: string;
+};
 
 interface TestDelegate {
   findUnique(args: { where: TestRecord }): Promise<TestRecord | null>;
@@ -33,7 +37,9 @@ function createRecordStore() {
         }) {
           const key = JSON.stringify(args.where);
           const current = store.get(key) ?? null;
-          const record = current ? { ...current, ...args.update } : { ...args.create };
+          const record = current
+            ? { ...current, ...args.update }
+            : { ...args.create };
           store.set(key, record);
           return record;
         },
@@ -70,16 +76,23 @@ function createInMemoryStage3Database() {
     importIssue: TestDelegate;
     importRun: {
       create(args: { data: TestRecord }): Promise<TestRecord>;
-      update(args: { where: { id: string }; data: TestRecord }): Promise<TestRecord>;
+      update(args: {
+        where: { id: string };
+        data: TestRecord;
+      }): Promise<TestRecord>;
     };
     datasetRevision: {
-      findFirst(args: { where: { datasetId: string } }): Promise<RevisionRecord | null>;
+      findFirst(args: {
+        where: { datasetId: string };
+      }): Promise<RevisionRecord | null>;
       create(args: { data: RevisionRecord }): Promise<RevisionRecord>;
     };
   }
 
   return {
-    $transaction: async <T>(callback: (transaction: TestTransaction) => Promise<T>) =>
+    $transaction: async <T>(
+      callback: (transaction: TestTransaction) => Promise<T>,
+    ) =>
       callback({
         category: categories.delegate(),
         theme: themes.delegate(),
@@ -166,19 +179,15 @@ describe("Stage 3 importer", () => {
   it("persists the same snapshot without creating duplicate domain records", async () => {
     const database = createInMemoryStage3Database();
 
-    await importStage3Source(
-      database,
-      sampleStage3Source,
-      { startedAt: new Date("2026-07-22T00:00:00.000Z") },
-    );
+    await importStage3Source(database, sampleStage3Source, {
+      startedAt: new Date("2026-07-22T00:00:00.000Z"),
+    });
 
     const firstSnapshot = database.snapshot();
 
-    await importStage3Source(
-      database,
-      sampleStage3Source,
-      { startedAt: new Date("2026-07-23T00:00:00.000Z") },
-    );
+    await importStage3Source(database, sampleStage3Source, {
+      startedAt: new Date("2026-07-23T00:00:00.000Z"),
+    });
 
     const secondSnapshot = database.snapshot();
 

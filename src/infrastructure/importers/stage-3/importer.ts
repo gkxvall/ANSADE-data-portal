@@ -47,7 +47,9 @@ interface Stage3Transaction {
 }
 
 interface Stage3Database {
-  $transaction<T>(callback: (transaction: Stage3Transaction) => Promise<T>): Promise<T>;
+  $transaction<T>(
+    callback: (transaction: Stage3Transaction) => Promise<T>,
+  ): Promise<T>;
 }
 
 async function upsertAndCount<TRecord extends Stage3Record>(

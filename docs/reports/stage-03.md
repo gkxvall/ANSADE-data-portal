@@ -120,12 +120,12 @@ npm test
 
 ## Verification results
 
-| Check            | Result |
-| ---------------- | ------ |
-| TypeScript       | Passed |
+| Check            | Result                      |
+| ---------------- | --------------------------- |
+| TypeScript       | Passed                      |
 | Vitest           | Passed, 11 files / 45 tests |
-| ESLint           | Passed, zero warnings |
-| Production build | Passed |
+| ESLint           | Passed, zero warnings       |
+| Production build | Passed                      |
 
 ## Limitations and risks
 

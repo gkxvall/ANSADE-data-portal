@@ -324,22 +324,22 @@ Those fields must be transformed by an adapter into the stable internal domain m
 
 ## Technology stack
 
-| Area | Technology |
-|---|---|
-| Framework | Next.js |
-| Language | TypeScript |
-| UI | React |
-| Styling | Tailwind CSS |
-| Database | PostgreSQL |
-| ORM | Prisma |
-| Validation | Zod |
-| Tables | TanStack Table |
-| Charts | Recharts |
-| Unit testing | Vitest |
-| Component testing | React Testing Library |
-| End-to-end testing | Playwright |
-| Formatting | Prettier |
-| Linting | ESLint |
+| Area               | Technology            |
+| ------------------ | --------------------- |
+| Framework          | Next.js               |
+| Language           | TypeScript            |
+| UI                 | React                 |
+| Styling            | Tailwind CSS          |
+| Database           | PostgreSQL            |
+| ORM                | Prisma                |
+| Validation         | Zod                   |
+| Tables             | TanStack Table        |
+| Charts             | Recharts              |
+| Unit testing       | Vitest                |
+| Component testing  | React Testing Library |
+| End-to-end testing | Playwright            |
+| Formatting         | Prettier              |
+| Linting            | ESLint                |
 
 ---
 
@@ -432,13 +432,13 @@ http://localhost:3000/api/health
 
 ## Environment variables
 
-| Variable | Required | Visibility | Current use |
-|---|---:|---|---|
-| `DATABASE_URL` | Yes for database operations | Server only | PostgreSQL and Prisma connection |
-| `DATA_SOURCE` | No | Server only | Currently expected to be `postgres` |
-| `ANSADE_API_BASE_URL` | No | Server only | Reserved for a future API provider |
-| `ANSADE_API_TOKEN` | No | Server only | Reserved for future authenticated API access |
-| `NEXT_PUBLIC_APP_NAME` | No | Public | Application display name |
+| Variable               |                    Required | Visibility  | Current use                                  |
+| ---------------------- | --------------------------: | ----------- | -------------------------------------------- |
+| `DATABASE_URL`         | Yes for database operations | Server only | PostgreSQL and Prisma connection             |
+| `DATA_SOURCE`          |                          No | Server only | Currently expected to be `postgres`          |
+| `ANSADE_API_BASE_URL`  |                          No | Server only | Reserved for a future API provider           |
+| `ANSADE_API_TOKEN`     |                          No | Server only | Reserved for future authenticated API access |
+| `NEXT_PUBLIC_APP_NAME` |                          No | Public      | Application display name                     |
 
 Never commit production credentials or `.env` files.
 
@@ -628,28 +628,28 @@ Important files include:
 
 ## Current-state summary
 
-| Capability | Status |
-|---|---|
-| Next.js application foundation | Implemented |
-| TypeScript and linting | Implemented |
-| Responsive structural UI | Implemented |
-| PostgreSQL and Prisma | Implemented |
-| Normalized statistical schema | Implemented |
-| Sample source validation | Implemented |
-| Sample normalization | Implemented |
-| Idempotent import upserts | Implemented |
-| Import history | Implemented |
-| Revision tracking | Implemented |
-| Real ANSADE data retrieval | Not implemented |
-| Portal scraping | Not implemented |
-| Official API integration | Not implemented |
-| CSV/Excel import | Not implemented |
-| PostgreSQL repository for UI | Not implemented |
-| Catalogue pages | Not implemented |
-| Dataset explorer | Not implemented |
-| Interactive charts | Not implemented |
-| Scheduled synchronization | Not implemented |
-| Observation-dimension joins | Incomplete |
+| Capability                     | Status          |
+| ------------------------------ | --------------- |
+| Next.js application foundation | Implemented     |
+| TypeScript and linting         | Implemented     |
+| Responsive structural UI       | Implemented     |
+| PostgreSQL and Prisma          | Implemented     |
+| Normalized statistical schema  | Implemented     |
+| Sample source validation       | Implemented     |
+| Sample normalization           | Implemented     |
+| Idempotent import upserts      | Implemented     |
+| Import history                 | Implemented     |
+| Revision tracking              | Implemented     |
+| Real ANSADE data retrieval     | Not implemented |
+| Portal scraping                | Not implemented |
+| Official API integration       | Not implemented |
+| CSV/Excel import               | Not implemented |
+| PostgreSQL repository for UI   | Not implemented |
+| Catalogue pages                | Not implemented |
+| Dataset explorer               | Not implemented |
+| Interactive charts             | Not implemented |
+| Scheduled synchronization      | Not implemented |
+| Observation-dimension joins    | Incomplete      |
 
 ---
 

@@ -14,15 +14,36 @@ const optionalSecret = z.preprocess(
 const serverEnvSchema = z
   .object({
     DATABASE_URL: z
-      .url()
+      .string()
+      .trim()
+      .optional()
       .refine(
         (value) =>
-          value.startsWith("postgresql://") || value.startsWith("postgres://"),
+          value === undefined ||
+          value.startsWith("postgresql://") ||
+          value.startsWith("postgres://"),
         "DATABASE_URL must use the postgresql:// or postgres:// protocol",
       ),
-    DATA_SOURCE: z.enum(["postgres"]).default("postgres"),
+    DATA_SOURCE: z.enum(["postgres", "api"]).default("postgres"),
     ANSADE_API_BASE_URL: optionalUrl,
     ANSADE_API_TOKEN: optionalSecret,
+  })
+  .superRefine((value, context) => {
+    if (value.DATA_SOURCE === "postgres" && !value.DATABASE_URL) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "DATABASE_URL is required when DATA_SOURCE=postgres",
+        path: ["DATABASE_URL"],
+      });
+    }
+
+    if (value.DATA_SOURCE === "api" && !value.ANSADE_API_BASE_URL) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "ANSADE_API_BASE_URL is required when DATA_SOURCE=api",
+        path: ["ANSADE_API_BASE_URL"],
+      });
+    }
   })
   .strict();
 
