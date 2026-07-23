@@ -1,4 +1,4 @@
-import type { Category, Dataset, Theme } from "../entities";
+import type { Category } from "../entities";
 import type {
   DatasetCatalogueItem,
   ThemeCatalogueItem,

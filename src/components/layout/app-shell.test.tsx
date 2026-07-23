@@ -15,9 +15,14 @@ describe("AppShell", () => {
     expect(
       screen.getAllByRole("navigation", { name: "Navigation principale" }),
     ).toHaveLength(1);
-    expect(
-      screen.getByText("Catalogue").closest("[aria-disabled='true']"),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Catégories" })).toHaveAttribute(
+      "href",
+      "/categories",
+    );
+    expect(screen.getByRole("link", { name: "Recherche" })).toHaveAttribute(
+      "href",
+      "/search",
+    );
   });
 
   it("opens and closes the mobile navigation", () => {

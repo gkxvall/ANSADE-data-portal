@@ -4,7 +4,7 @@ A modern statistical data exploration platform for ANSADE, built with Next.js, T
 
 The project is designed to import, normalize, store, and eventually visualize ANSADE statistical datasets while keeping the application independent from any one source format. The frontend is intended to work with PostgreSQL today and transition later to a live ANSADE API provider without requiring major changes to the user interface.
 
-> **Current status:** the project foundation, normalized database model, and Stage 3 sample import pipeline are implemented. The importer now normalizes observation-to-dimension-value joins as well as observations, but it still does not retrieve real data from the ANSADE portal, and the frontend does not yet read imported PostgreSQL data.
+> **Current status:** the project foundation, normalized database model, Stage 3 sample import pipeline, Stage 4 provider abstraction, and Stage 5 catalogue/search pages are implemented. The importer still uses a checked-in sample source rather than a live ANSADE export, but the UI now reads catalog data through repository services instead of importing Prisma directly.
 
 ---
 
@@ -43,6 +43,28 @@ The repository currently includes:
 - ESLint and Prettier;
 - Vitest and React Testing Library;
 - Playwright configuration.
+
+### Repository and provider abstraction
+
+The application now reads catalog data through a provider boundary instead of importing Prisma from UI components. The configured provider is selected with `DATA_SOURCE`, and the current supported implementations are:
+
+- PostgreSQL-backed repositories for the imported snapshot;
+- a mock provider for local and test-only catalogue data;
+- a future API-provider skeleton that fails explicitly until the live contract is defined.
+
+Presentation code is still blocked from importing Prisma directly.
+
+### Catalogue and search UI
+
+The UI now includes:
+
+- a home page with catalogue entry points;
+- category listing and detail pages;
+- theme detail pages;
+- a dataset catalogue with pagination and sorting;
+- a dataset detail page;
+- a global search page;
+- breadcrumbs and recently viewed datasets.
 
 ### Database foundation
 
@@ -111,6 +133,23 @@ Run the current sample importer with:
 npm run import:stage3
 ```
 
+### Stage 5 browsing flow
+
+The current browse hierarchy is:
+
+```text
+Accueil
+    ├── Catégories
+    │    └── Détail de catégorie
+    ├── Thèmes
+    │    └── Détail de thème
+    ├── Jeux de données
+    │    └── Détail de jeu de données
+    └── Recherche globale
+```
+
+These pages are backed by application query helpers and repository interfaces, not by direct Prisma imports in presentation code.
+
 ---
 
 ## Important data-status notice
@@ -140,22 +179,16 @@ Some sample records are intentionally incomplete or invalid so the importer can 
 
 ## Current frontend behavior
 
-The frontend currently renders a structural foundation page.
+The frontend now renders a working catalogue surface.
 
-It does not yet:
+It currently does not yet:
 
-- query PostgreSQL;
-- list database categories;
-- list themes;
-- list datasets;
-- display observations;
-- render charts from stored data;
-- apply statistical filters;
-- expose an application repository;
-- expose dataset API routes;
-- synchronize with the ANSADE portal.
+- render the interactive dataset explorer from Stage 6;
+- show charts or comparisons from normalized observations;
+- provide exports or saved views;
+- expose admin import monitoring.
 
-Running the importer populates PostgreSQL, but the current page does not display those imported records.
+Running the importer populates PostgreSQL, and the browse pages now display imported catalogue records through repository services.
 
 The runtime is currently:
 
@@ -164,12 +197,11 @@ Sample source
     ↓
 Importer
     ↓
-PostgreSQL
-
-PostgreSQL
-    ✕ not connected to the current UI
-
-Static foundation page
+PostgreSQL repository
+    ↓
+Application query helpers
+    ↓
+Catalogue and search pages
 ```
 
 ---
@@ -269,26 +301,11 @@ Responsibilities:
 
 ---
 
-## Planned data-provider model
+## Data-provider model
 
-The application is intended to depend on a stable repository contract rather than directly reading static files or calling an API from UI components.
+The application depends on a stable repository contract rather than directly reading static files or calling an API from UI components.
 
-A future repository interface should expose operations similar to:
-
-```ts
-interface StatisticsRepository {
-  listCategories(): Promise<Category[]>;
-  listThemes(categoryId: string): Promise<Theme[]>;
-  listDatasets(themeId: string): Promise<DatasetSummary[]>;
-  getDataset(datasetId: string): Promise<DatasetDetails | null>;
-  getObservations(
-    datasetId: string,
-    filters: ObservationFilters,
-  ): Promise<Observation[]>;
-}
-```
-
-The intended provider transition is:
+The current provider transition is:
 
 ```text
 Current

@@ -7,10 +7,8 @@ import type {
   DatasetMetadata,
   Dimension,
   Observation,
-  Theme,
 } from "@/domain/entities";
 import type {
-  CatalogueListOptions,
   DatasetCatalogueItem,
   DatasetDetail,
   DatasetListOptions,

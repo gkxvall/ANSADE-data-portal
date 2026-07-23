@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 
+import { vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
+
 import { createApiDataProvider } from "./api";
 import { createMockDataProvider } from "./mock";
 

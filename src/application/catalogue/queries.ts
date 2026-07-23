@@ -1,7 +1,6 @@
 import { getDataProvider } from "@/infrastructure/providers";
 
 import type {
-  CatalogueListOptions,
   DatasetCatalogueItem,
   DatasetDetail,
   DatasetListOptions,

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 
 import type { DatasetCatalogueItem } from "@/domain/repositories";
 
@@ -31,29 +31,27 @@ export function RecentlyViewedDatasets({
   readonly datasets: readonly DatasetCatalogueItem[];
   readonly currentDatasetSlug?: string;
 }) {
-  const [history, setHistory] = useState<string[]>([]);
+  const history = readHistory();
+  const recentSlugs = useMemo(
+    () =>
+      currentDatasetSlug
+        ? [
+            currentDatasetSlug,
+            ...history.filter((slug) => slug !== currentDatasetSlug),
+          ]
+        : history,
+    [currentDatasetSlug, history],
+  );
 
   useEffect(() => {
-    const nextHistory = readHistory();
-
-    if (currentDatasetSlug && !nextHistory.includes(currentDatasetSlug)) {
-      nextHistory.unshift(currentDatasetSlug);
-      writeHistory(nextHistory);
-    } else if (currentDatasetSlug) {
-      const withoutCurrent = nextHistory.filter((slug) => slug !== currentDatasetSlug);
-      withoutCurrent.unshift(currentDatasetSlug);
-      writeHistory(withoutCurrent);
+    if (currentDatasetSlug) {
+      writeHistory(recentSlugs);
     }
+  }, [currentDatasetSlug, recentSlugs]);
 
-    setHistory(readHistory());
-  }, [currentDatasetSlug]);
-
-  const recentDatasets = useMemo(() => {
-    const slugOrder = history.length > 0 ? history : readHistory();
-    return slugOrder
-      .map((slug) => datasets.find((dataset) => dataset.slug === slug))
-      .filter((dataset): dataset is DatasetCatalogueItem => Boolean(dataset));
-  }, [datasets, history]);
+  const recentDatasets = recentSlugs
+    .map((slug) => datasets.find((dataset) => dataset.slug === slug))
+    .filter((dataset): dataset is DatasetCatalogueItem => Boolean(dataset));
 
   if (recentDatasets.length === 0) {
     return (
