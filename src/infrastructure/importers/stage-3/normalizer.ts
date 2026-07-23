@@ -17,15 +17,17 @@ import type {
   RawStage3Table,
 } from "@/infrastructure/adapters/ansade-stage3";
 
-import {
-  sha256Checksum,
-  stableStringify,
-  stableUuid,
-} from "./checksum";
+import { sha256Checksum, stableStringify, stableUuid } from "./checksum";
 import type { Stage3NormalizedImport, Stage3NormalizedTable } from "./types";
 
-function sortKeys(value: Readonly<Record<string, string>>): Record<string, string> {
-  return Object.fromEntries(Object.keys(value).sort().map((key) => [key, value[key]]));
+function sortKeys(
+  value: Readonly<Record<string, string>>,
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.keys(value)
+      .sort()
+      .map((key) => [key, value[key]]),
+  );
 }
 
 function buildSourceReference(
@@ -57,7 +59,10 @@ function buildSourceReference(
   };
 }
 
-function parseNumericValue(rawValue: string | null, numericValue: number | null): number | null {
+function parseNumericValue(
+  rawValue: string | null,
+  numericValue: number | null,
+): number | null {
   if (numericValue !== null) {
     return numericValue;
   }
@@ -66,13 +71,19 @@ function parseNumericValue(rawValue: string | null, numericValue: number | null)
     return null;
   }
 
-  const cleaned = rawValue.replace(/[\s\u00a0\u202f]/g, "").replace(/%$/, "").replace(",", ".");
+  const cleaned = rawValue
+    .replace(/[\s\u00a0\u202f]/g, "")
+    .replace(/%$/, "")
+    .replace(",", ".");
   const parsed = Number(cleaned.replace(/[^0-9+\-.]/g, ""));
 
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function dimensionSourceScope(datasetSourceId: string, dimensionSourceId: string): string {
+function dimensionSourceScope(
+  datasetSourceId: string,
+  dimensionSourceId: string,
+): string {
   return `${datasetSourceId}:${dimensionSourceId}`;
 }
 
@@ -91,7 +102,12 @@ function normalizeDimension(
   values: readonly DimensionValue[];
   references: readonly SourceReference[];
 } {
-  const dimensionId = stableUuid([sourceSystem, "DIMENSION", dataset.sourceId, dimension.id_dimension]);
+  const dimensionId = stableUuid([
+    sourceSystem,
+    "DIMENSION",
+    dataset.sourceId,
+    dimension.id_dimension,
+  ]);
 
   const normalizedDimension: Dimension = {
     id: dimensionId,
@@ -100,7 +116,9 @@ function normalizeDimension(
     key: dimension.code_dimension,
     label: dimension.libelle_dimension,
     kind: dimension.type_dimension,
-    position: table.dimensions.findIndex((candidate) => candidate.id_dimension === dimension.id_dimension),
+    position: table.dimensions.findIndex(
+      (candidate) => candidate.id_dimension === dimension.id_dimension,
+    ),
     isRequired: dimension.obligatoire,
     sourceUpdatedAt: dimension.source_updated_at,
     sourcePublishedAt: dimension.source_published_at,
@@ -141,7 +159,10 @@ function normalizeDimension(
       dimension.id_dimension,
       dimension.source_updated_at,
       dimension.source_published_at,
-      { datasetSourceId: dataset.sourceId, dimensionKey: dimension.code_dimension },
+      {
+        datasetSourceId: dataset.sourceId,
+        dimensionKey: dimension.code_dimension,
+      },
       null,
     ),
     ...values.map((value) =>
@@ -168,20 +189,34 @@ function normalizeTable(
   importedAt: Date,
 ): Stage3NormalizedTable {
   const categoryRecord = source.categories.find((category) =>
-    source.themes.some((theme) => theme.id_categorie === category.id_categorie && theme.id_theme === table.id_theme),
+    source.themes.some(
+      (theme) =>
+        theme.id_categorie === category.id_categorie &&
+        theme.id_theme === table.id_theme,
+    ),
   );
 
-  const themeRecord = source.themes.find((theme) => theme.id_theme === table.id_theme);
+  const themeRecord = source.themes.find(
+    (theme) => theme.id_theme === table.id_theme,
+  );
 
   if (!categoryRecord || !themeRecord) {
     throw new Error(`Table ${table.id_table} is missing its category or theme`);
   }
 
   const sourceSystem = source.source_system;
-  const categoryId = stableUuid([sourceSystem, "CATEGORY", categoryRecord.id_categorie]);
+  const categoryId = stableUuid([
+    sourceSystem,
+    "CATEGORY",
+    categoryRecord.id_categorie,
+  ]);
   const themeId = stableUuid([sourceSystem, "THEME", themeRecord.id_theme]);
   const datasetId = stableUuid([sourceSystem, "DATASET", table.id_table]);
-  const metadataId = stableUuid([sourceSystem, "DATASET_METADATA", table.id_table]);
+  const metadataId = stableUuid([
+    sourceSystem,
+    "DATASET_METADATA",
+    table.id_table,
+  ]);
 
   const category: Category = {
     id: categoryId,
@@ -233,8 +268,12 @@ function normalizeTable(
   const metadata: DatasetMetadata = {
     id: metadataId,
     datasetId,
-    unit: table.resume_metadonnees?.unite ? String(table.resume_metadonnees.unite) : null,
-    frequency: table.resume_metadonnees?.frequence ? String(table.resume_metadonnees.frequence) : null,
+    unit: table.resume_metadonnees?.unite
+      ? String(table.resume_metadonnees.unite)
+      : null,
+    frequency: table.resume_metadonnees?.frequence
+      ? String(table.resume_metadonnees.frequence)
+      : null,
     methodology: null,
     coverage: null,
     limitations: null,
@@ -310,10 +349,18 @@ function normalizeTable(
       rawCoordinate: row.coordonnees[dimension.key],
     }));
 
-    const missingDimension = orderedDimensions.find((entry) => entry.rawCoordinate === undefined);
+    const missingDimension = orderedDimensions.find(
+      (entry) => entry.rawCoordinate === undefined,
+    );
     if (missingDimension) {
       issues.push({
-        id: stableUuid([sourceSystem, "IMPORT_ISSUE", table.id_table, row.id_ligne, "missing-dimension"]),
+        id: stableUuid([
+          sourceSystem,
+          "IMPORT_ISSUE",
+          table.id_table,
+          row.id_ligne,
+          "missing-dimension",
+        ]),
         importRunId: "pending-import-run",
         datasetId,
         severity: "ERROR",
@@ -321,7 +368,10 @@ function normalizeTable(
         message: `Row ${row.id_ligne} is missing coordinate ${missingDimension.dimension.key}`,
         sourceEntityType: "OBSERVATION",
         sourceId: row.id_ligne,
-        details: { tableSourceId: table.id_table, missingKey: missingDimension.dimension.key },
+        details: {
+          tableSourceId: table.id_table,
+          missingKey: missingDimension.dimension.key,
+        },
         createdAt: importedAt,
       });
       continue;
@@ -334,11 +384,21 @@ function normalizeTable(
     for (const entry of orderedDimensions) {
       const value = dimensionResults
         .flatMap((result) => result.values)
-        .find((candidate) => candidate.dimensionId === entry.dimension.id && candidate.code === entry.rawCoordinate);
+        .find(
+          (candidate) =>
+            candidate.dimensionId === entry.dimension.id &&
+            candidate.code === entry.rawCoordinate,
+        );
 
       if (!value) {
         issues.push({
-          id: stableUuid([sourceSystem, "IMPORT_ISSUE", table.id_table, row.id_ligne, entry.dimension.key]),
+          id: stableUuid([
+            sourceSystem,
+            "IMPORT_ISSUE",
+            table.id_table,
+            row.id_ligne,
+            entry.dimension.key,
+          ]),
           importRunId: "pending-import-run",
           datasetId,
           severity: "ERROR",
@@ -346,7 +406,11 @@ function normalizeTable(
           message: `Row ${row.id_ligne} references unknown value ${String(entry.rawCoordinate)} for ${entry.dimension.key}`,
           sourceEntityType: "OBSERVATION",
           sourceId: row.id_ligne,
-          details: { tableSourceId: table.id_table, dimensionKey: entry.dimension.key, coordinate: entry.rawCoordinate },
+          details: {
+            tableSourceId: table.id_table,
+            dimensionKey: entry.dimension.key,
+            coordinate: entry.rawCoordinate,
+          },
           createdAt: importedAt,
         });
         rowIsValid = false;
@@ -367,7 +431,13 @@ function normalizeTable(
     const parsedValue = parseNumericValue(rawValue, row.valeur_numerique);
 
     observations.push({
-      id: stableUuid([sourceSystem, "OBSERVATION", dataset.sourceId, row.id_ligne, coordinateHash]),
+      id: stableUuid([
+        sourceSystem,
+        "OBSERVATION",
+        dataset.sourceId,
+        row.id_ligne,
+        coordinateHash,
+      ]),
       datasetId,
       sourceId: row.id_ligne,
       coordinate: normalizedCoordinate,
@@ -425,21 +495,38 @@ function normalizeTable(
   };
 }
 
-export function normalizeStage3Import(source: RawStage3Source, startedAt: Date): Stage3NormalizedImport {
+export function normalizeStage3Import(
+  source: RawStage3Source,
+  startedAt: Date,
+): Stage3NormalizedImport {
   const tables = source.tables.filter(tableIsSelectable);
-  const normalizedTables = tables.map((table) => normalizeTable(source, table, startedAt));
+  const normalizedTables = tables.map((table) =>
+    normalizeTable(source, table, startedAt),
+  );
 
   const categories = normalizedTables.map((table) => table.category);
   const themes = normalizedTables.map((table) => table.theme);
-  const datasets = normalizedTables.map((table) => ({ ...table.dataset, checksum: table.revisionChecksum }));
+  const datasets = normalizedTables.map((table) => ({
+    ...table.dataset,
+    checksum: table.revisionChecksum,
+  }));
   const metadata = normalizedTables.map((table) => table.metadata);
   const dimensions = normalizedTables.flatMap((table) => table.dimensions);
-  const dimensionValues = normalizedTables.flatMap((table) => table.dimensionValues);
+  const dimensionValues = normalizedTables.flatMap(
+    (table) => table.dimensionValues,
+  );
   const observations = normalizedTables.flatMap((table) => table.observations);
-  const sourceReferences = normalizedTables.flatMap((table) => table.sourceReferences);
+  const sourceReferences = normalizedTables.flatMap(
+    (table) => table.sourceReferences,
+  );
 
   const revisions = normalizedTables.map((table, index) => ({
-    id: stableUuid([source.source_system, "DATASET_REVISION", table.dataset.sourceId, table.revisionChecksum]),
+    id: stableUuid([
+      source.source_system,
+      "DATASET_REVISION",
+      table.dataset.sourceId,
+      table.revisionChecksum,
+    ]),
     datasetId: table.dataset.id,
     importRunId: null,
     revision: 1,
@@ -454,7 +541,12 @@ export function normalizeStage3Import(source: RawStage3Source, startedAt: Date):
     table.observations.length === 0
       ? [
           {
-            id: stableUuid([source.source_system, "IMPORT_ISSUE", table.dataset.sourceId, String(index)]),
+            id: stableUuid([
+              source.source_system,
+              "IMPORT_ISSUE",
+              table.dataset.sourceId,
+              String(index),
+            ]),
             importRunId: "pending-import-run",
             datasetId: table.dataset.id,
             severity: "WARNING" as const,
@@ -469,7 +561,17 @@ export function normalizeStage3Import(source: RawStage3Source, startedAt: Date):
       : [],
   );
 
-  const recordsCreated = categories.length + themes.length + datasets.length + metadata.length + dimensions.length + dimensionValues.length + observations.length + sourceReferences.length + revisions.length + issues.length;
+  const recordsCreated =
+    categories.length +
+    themes.length +
+    datasets.length +
+    metadata.length +
+    dimensions.length +
+    dimensionValues.length +
+    observations.length +
+    sourceReferences.length +
+    revisions.length +
+    issues.length;
 
   return {
     sourceSystem: source.source_system,
@@ -499,6 +601,9 @@ export function normalizeStage3Import(source: RawStage3Source, startedAt: Date):
   };
 }
 
-export function normalizeStage3RawSource(source: RawStage3Source, startedAt: Date): Stage3NormalizedImport {
+export function normalizeStage3RawSource(
+  source: RawStage3Source,
+  startedAt: Date,
+): Stage3NormalizedImport {
   return normalizeStage3Import(source, startedAt);
 }

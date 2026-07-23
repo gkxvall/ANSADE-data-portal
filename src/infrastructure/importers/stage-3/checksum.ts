@@ -9,7 +9,10 @@ function canonicalize(value: unknown): unknown {
     return Object.fromEntries(
       Object.keys(value as Record<string, unknown>)
         .sort()
-        .map((key) => [key, canonicalize((value as Record<string, unknown>)[key])]),
+        .map((key) => [
+          key,
+          canonicalize((value as Record<string, unknown>)[key]),
+        ]),
     );
   }
 

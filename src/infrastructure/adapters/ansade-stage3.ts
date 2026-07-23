@@ -62,10 +62,15 @@ const rawTableSchema = z.object({
   nom_table: z.string().trim().min(1).max(500),
   description: z.string().trim().min(1).nullable().default(null),
   organisme_source: z.string().trim().min(1).max(255).nullable().default(null),
-  statut_publication: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED", "UNKNOWN"]).default("UNKNOWN"),
+  statut_publication: z
+    .enum(["DRAFT", "PUBLISHED", "ARCHIVED", "UNKNOWN"])
+    .default("UNKNOWN"),
   publiee: z.coerce.boolean().default(false),
   selectionnee: z.coerce.boolean().default(false),
-  resume_metadonnees: z.record(z.string(), z.unknown()).nullable().default(null),
+  resume_metadonnees: z
+    .record(z.string(), z.unknown())
+    .nullable()
+    .default(null),
   dimensions: z.array(rawDimensionSchema),
   lignes: z.array(rawRowSchema),
   source_updated_at: isoDateSchema.nullish().default(null),

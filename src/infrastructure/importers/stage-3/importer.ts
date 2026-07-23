@@ -28,7 +28,9 @@ interface Stage3Transaction {
     update(args: any): Promise<ImportRun>;
   };
   datasetRevision: {
-    findFirst(args: any): Promise<{ revision: number; checksum: string } | null>;
+    findFirst(
+      args: any,
+    ): Promise<{ revision: number; checksum: string } | null>;
     create(args: any): Promise<{ id: string }>;
   };
 }
@@ -108,7 +110,12 @@ async function persistNormalizedImport(
     for (const category of normalized.categories) {
       const result = await upsertAndCount(
         transaction.category,
-        { sourceSystem_sourceId: { sourceSystem: category.sourceSystem, sourceId: category.sourceId } },
+        {
+          sourceSystem_sourceId: {
+            sourceSystem: category.sourceSystem,
+            sourceId: category.sourceId,
+          },
+        },
         category,
         category,
       );
@@ -119,7 +126,12 @@ async function persistNormalizedImport(
     for (const theme of normalized.themes) {
       const result = await upsertAndCount(
         transaction.theme,
-        { sourceSystem_sourceId: { sourceSystem: theme.sourceSystem, sourceId: theme.sourceId } },
+        {
+          sourceSystem_sourceId: {
+            sourceSystem: theme.sourceSystem,
+            sourceId: theme.sourceId,
+          },
+        },
         theme,
         theme,
       );
@@ -130,7 +142,12 @@ async function persistNormalizedImport(
     for (const dataset of normalized.datasets) {
       const result = await upsertAndCount(
         transaction.dataset,
-        { sourceSystem_sourceId: { sourceSystem: dataset.sourceSystem, sourceId: dataset.sourceId } },
+        {
+          sourceSystem_sourceId: {
+            sourceSystem: dataset.sourceSystem,
+            sourceId: dataset.sourceId,
+          },
+        },
         dataset,
         dataset,
       );
@@ -152,7 +169,12 @@ async function persistNormalizedImport(
     for (const dimension of normalized.dimensions) {
       const result = await upsertAndCount(
         transaction.dimension,
-        { datasetId_sourceId: { datasetId: dimension.datasetId, sourceId: dimension.sourceId } },
+        {
+          datasetId_sourceId: {
+            datasetId: dimension.datasetId,
+            sourceId: dimension.sourceId,
+          },
+        },
         dimension,
         dimension,
       );
@@ -163,7 +185,12 @@ async function persistNormalizedImport(
     for (const dimensionValue of normalized.dimensionValues) {
       const result = await upsertAndCount(
         transaction.dimensionValue,
-        { dimensionId_sourceId: { dimensionId: dimensionValue.dimensionId, sourceId: dimensionValue.sourceId } },
+        {
+          dimensionId_sourceId: {
+            dimensionId: dimensionValue.dimensionId,
+            sourceId: dimensionValue.sourceId,
+          },
+        },
         dimensionValue,
         dimensionValue,
       );
@@ -174,14 +201,25 @@ async function persistNormalizedImport(
     for (const observation of normalized.observations) {
       const result = await upsertAndCount(
         transaction.observation,
-        { datasetId_coordinateHash: { datasetId: observation.datasetId, coordinateHash: observation.coordinateHash } },
         {
-          ...observation,
-          value: observation.value === null ? null : new Prisma.Decimal(observation.value),
+          datasetId_coordinateHash: {
+            datasetId: observation.datasetId,
+            coordinateHash: observation.coordinateHash,
+          },
         },
         {
           ...observation,
-          value: observation.value === null ? null : new Prisma.Decimal(observation.value),
+          value:
+            observation.value === null
+              ? null
+              : new Prisma.Decimal(observation.value),
+        },
+        {
+          ...observation,
+          value:
+            observation.value === null
+              ? null
+              : new Prisma.Decimal(observation.value),
         },
       );
       recordsCreated += result.created ? 1 : 0;
@@ -233,7 +271,9 @@ async function persistNormalizedImport(
       }
 
       const nextRevision = (latestRevision?.revision ?? 0) + 1;
-      const revision = normalized.revisions.find((candidate) => candidate.datasetId === dataset.id);
+      const revision = normalized.revisions.find(
+        (candidate) => candidate.datasetId === dataset.id,
+      );
       if (!revision) {
         continue;
       }
@@ -241,7 +281,13 @@ async function persistNormalizedImport(
       await transaction.datasetRevision.create({
         data: {
           ...revision,
-          id: stableUuid([dataset.sourceSystem, "DATASET_REVISION", dataset.sourceId, String(nextRevision), dataset.checksum ?? sha256Checksum(revision.snapshot)]),
+          id: stableUuid([
+            dataset.sourceSystem,
+            "DATASET_REVISION",
+            dataset.sourceId,
+            String(nextRevision),
+            dataset.checksum ?? sha256Checksum(revision.snapshot),
+          ]),
           importRunId,
           revision: nextRevision,
           kind: latestRevision === null ? "CREATED" : "UPDATED",
@@ -253,9 +299,16 @@ async function persistNormalizedImport(
     }
 
     const finishedAt = new Date();
-    const status = normalized.issues.some((issue) => issue.severity === "ERROR") ? "PARTIAL" : "SUCCEEDED";
+    const status = normalized.issues.some((issue) => issue.severity === "ERROR")
+      ? "PARTIAL"
+      : "SUCCEEDED";
 
-    const summary = normalizeSummary(normalized, recordsCreated, recordsUpdated, revisionCount);
+    const summary = normalizeSummary(
+      normalized,
+      recordsCreated,
+      recordsUpdated,
+      revisionCount,
+    );
 
     const finalImportRun = await transaction.importRun.update({
       where: { id: importRun.id },
@@ -291,5 +344,8 @@ export async function importStage3Source(
 
 export async function importSampleStage3Source(): Promise<Stage3ImportResult> {
   const { sampleStage3Source } = await import("./sample-source");
-  return importStage3Source(prisma as unknown as Stage3Database, sampleStage3Source);
+  return importStage3Source(
+    prisma as unknown as Stage3Database,
+    sampleStage3Source,
+  );
 }
