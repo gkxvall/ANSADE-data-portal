@@ -4,7 +4,7 @@ A modern statistical data exploration platform for ANSADE, built with Next.js, T
 
 The project is designed to import, normalize, store, and eventually visualize ANSADE statistical datasets while keeping the application independent from any one source format. The frontend is intended to work with PostgreSQL today and transition later to a live ANSADE API provider without requiring major changes to the user interface.
 
-> **Current status:** the project foundation, normalized database model, and Stage 3 sample import pipeline are implemented. The application does not yet retrieve real data from the ANSADE portal, and the frontend does not yet read imported PostgreSQL data.
+> **Current status:** the project foundation, normalized database model, and Stage 3 sample import pipeline are implemented. The importer now normalizes observation-to-dimension-value joins as well as observations, but it still does not retrieve real data from the ANSADE portal, and the frontend does not yet read imported PostgreSQL data.
 
 ---
 
@@ -99,6 +99,7 @@ It supports:
 - idempotent upserts;
 - matching records through `sourceSystem` and `sourceId`;
 - matching observations through dataset ID and coordinate hash;
+- persistence of observation-to-dimension-value join rows;
 - import-run tracking;
 - warning and error persistence;
 - dataset checksum comparison;
@@ -129,7 +130,7 @@ It currently imports a hardcoded development source located at:
 src/infrastructure/importers/stage-3/sample-source.ts
 ```
 
-The sample source exists only to test validation, normalization, PostgreSQL persistence, import issues, and revision behavior.
+The sample source exists only to test validation, normalization, PostgreSQL persistence, import issues, revision behavior, and observation-dimension-value joins.
 
 It must not be treated as official ANSADE data.
 
@@ -185,17 +186,9 @@ ObservationDimensionValue
 DimensionValue
 ```
 
-This is intended to support efficient queries such as:
+This now exists in the Stage 3 importer as part of the sample normalization pipeline, but the imported data still comes from the checked-in development fixture rather than a real ANSADE export.
 
-```text
-year = 2024
-wilaya = Trarza
-sex = Female
-```
-
-The current importer persists dimensions, dimension values, and observations, but it does not yet persist all observation-to-dimension-value join records.
-
-Observation coordinates are still stored as JSON, but the missing join persistence should be implemented before advanced filtering, faceted search, and large-scale dataset queries are built.
+Observation coordinates remain stored as JSON alongside the normalized join rows, which keeps the sample pipeline ready for later filtering and faceted search work.
 
 ---
 

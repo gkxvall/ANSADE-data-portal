@@ -258,3 +258,13 @@ Mitigation:
 - keep the datasource URL in `prisma/schema.prisma` for CLI compatibility
 - provide `DATABASE_URL` in local or CI environments before running Prisma commands
 - treat the workspace diagnostic as a tooling warning unless the Prisma toolchain is upgraded end-to-end
+
+## 25. Stage 3 Still Uses a Checked-In Sample Source
+
+The importer can normalize and persist a representative ANSADE-like payload, but it still reads from the hardcoded sample source in `src/infrastructure/importers/stage-3/sample-source.ts`.
+
+Mitigation:
+
+- keep the sample source for deterministic tests
+- replace it with real fetch/file adapters in Stage 4 and Stage 5 work
+- preserve the same normalized output shape so the frontend and repositories do not need to change later

@@ -27,9 +27,17 @@ export interface Stage3NormalizedTable {
   readonly dimensions: readonly Dimension[];
   readonly dimensionValues: readonly DimensionValue[];
   readonly observations: readonly Observation[];
+  readonly observationDimensionValues: readonly Stage3ObservationDimensionValue[];
   readonly sourceReferences: readonly SourceReference[];
+  readonly issues: readonly ImportIssue[];
   readonly revisionSnapshot: Readonly<Record<string, unknown>>;
   readonly revisionChecksum: string;
+}
+
+export interface Stage3ObservationDimensionValue {
+  readonly observationId: string;
+  readonly dimensionId: string;
+  readonly dimensionValueId: string;
 }
 
 export interface Stage3NormalizedImport {
@@ -44,6 +52,7 @@ export interface Stage3NormalizedImport {
   readonly dimensions: readonly Dimension[];
   readonly dimensionValues: readonly DimensionValue[];
   readonly observations: readonly Observation[];
+  readonly observationDimensionValues: readonly Stage3ObservationDimensionValue[];
   readonly sourceReferences: readonly SourceReference[];
   readonly revisions: readonly DatasetRevision[];
   readonly issues: readonly ImportIssue[];
@@ -55,4 +64,3 @@ export interface Stage3ImportResult {
   readonly normalized: Stage3NormalizedImport;
   readonly importRun: ImportRun;
 }
-p;

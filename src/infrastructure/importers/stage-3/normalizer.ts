@@ -2,7 +2,6 @@ import type {
   Category,
   Dataset,
   DatasetMetadata,
-  DatasetRevision,
   Dimension,
   DimensionValue,
   Observation,
@@ -12,13 +11,16 @@ import type {
 
 import type {
   RawStage3Dimension,
-  RawStage3Row,
   RawStage3Source,
   RawStage3Table,
 } from "@/infrastructure/adapters/ansade-stage3";
 
-import { sha256Checksum, stableStringify, stableUuid } from "./checksum";
-import type { Stage3NormalizedImport, Stage3NormalizedTable } from "./types";
+import { sha256Checksum, stableUuid } from "./checksum";
+import type {
+  Stage3NormalizedImport,
+  Stage3NormalizedTable,
+  Stage3ObservationDimensionValue,
+} from "./types";
 
 function sortKeys(
   value: Readonly<Record<string, string>>,
@@ -292,6 +294,7 @@ function normalizeTable(
 
   const dimensions = dimensionResults.map((result) => result.dimension);
   const dimensionValues = dimensionResults.flatMap((result) => result.values);
+  const observationDimensionValues: Stage3ObservationDimensionValue[] = [];
   const references = [
     buildSourceReference(
       "CATEGORY",
@@ -451,6 +454,22 @@ function normalizeTable(
       createdAt: importedAt,
       updatedAt: importedAt,
     });
+
+    const observationId = stableUuid([
+      sourceSystem,
+      "OBSERVATION",
+      dataset.sourceId,
+      row.id_ligne,
+      coordinateHash,
+    ]);
+
+    for (const [index, dimensionValueId] of dimensionValueIds.entries()) {
+      observationDimensionValues.push({
+        observationId,
+        dimensionId: dimensions[index].id,
+        dimensionValueId,
+      });
+    }
   }
 
   const revisionSnapshot = {
@@ -489,9 +508,11 @@ function normalizeTable(
     dimensions,
     dimensionValues,
     observations,
+    observationDimensionValues,
     sourceReferences: references,
     revisionSnapshot,
     revisionChecksum: sha256Checksum(revisionSnapshot),
+    issues,
   };
 }
 
@@ -516,11 +537,14 @@ export function normalizeStage3Import(
     (table) => table.dimensionValues,
   );
   const observations = normalizedTables.flatMap((table) => table.observations);
+  const observationDimensionValues = normalizedTables.flatMap(
+    (table) => table.observationDimensionValues,
+  );
   const sourceReferences = normalizedTables.flatMap(
     (table) => table.sourceReferences,
   );
 
-  const revisions = normalizedTables.map((table, index) => ({
+  const revisions = normalizedTables.map((table) => ({
     id: stableUuid([
       source.source_system,
       "DATASET_REVISION",
@@ -537,7 +561,8 @@ export function normalizeStage3Import(
     createdAt: startedAt,
   }));
 
-  const issues = normalizedTables.flatMap((table, index) =>
+  const tableIssues = normalizedTables.flatMap((table) => table.issues);
+  const revisionIssues = normalizedTables.flatMap((table) =>
     table.observations.length === 0
       ? [
           {
@@ -545,7 +570,7 @@ export function normalizeStage3Import(
               source.source_system,
               "IMPORT_ISSUE",
               table.dataset.sourceId,
-              String(index),
+              "empty-table",
             ]),
             importRunId: "pending-import-run",
             datasetId: table.dataset.id,
@@ -560,6 +585,7 @@ export function normalizeStage3Import(
         ]
       : [],
   );
+  const issues = [...tableIssues, ...revisionIssues];
 
   const recordsCreated =
     categories.length +
@@ -585,6 +611,7 @@ export function normalizeStage3Import(
     dimensions,
     dimensionValues,
     observations,
+    observationDimensionValues,
     sourceReferences,
     revisions,
     issues,

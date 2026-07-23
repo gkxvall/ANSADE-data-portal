@@ -191,7 +191,7 @@ export const sampleStage3Source = {
         },
         {
           id_ligne: "ligne-2024-incomplete",
-          coordonnees: { annee: "2024" },
+          coordonnees: { annee: "2024", sexe: "inconnu" },
           valeur_numerique: null,
           valeur_brute: "invalid row",
           statut: "ROW_REJECTED",

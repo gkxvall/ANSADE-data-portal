@@ -1,7 +1,6 @@
 import { Prisma } from "@prisma/client";
 
 import { parseRawStage3Source } from "@/infrastructure/adapters/ansade-stage3";
-import { prisma } from "@/infrastructure/database/prisma";
 
 import { sha256Checksum, stableUuid } from "./checksum";
 import { normalizeStage3RawSource } from "./normalizer";
@@ -12,38 +11,50 @@ import type {
 } from "./types";
 import type { ImportRun } from "@/domain/entities";
 
+type Stage3Record = Record<string, unknown>;
+
+interface Stage3UpsertDelegate<TRecord extends Stage3Record = Stage3Record> {
+  findUnique(args: { where: unknown }): Promise<TRecord | null>;
+  upsert(args: {
+    where: unknown;
+    create: unknown;
+    update: unknown;
+  }): Promise<TRecord>;
+}
+
 interface Stage3Transaction {
-  category: any;
-  theme: any;
-  dataset: any;
-  datasetMetadata: any;
-  dimension: any;
-  dimensionValue: any;
-  observation: any;
-  observationDimensionValue: any;
-  sourceReference: any;
-  importIssue: any;
+  category: Stage3UpsertDelegate;
+  theme: Stage3UpsertDelegate;
+  dataset: Stage3UpsertDelegate;
+  datasetMetadata: Stage3UpsertDelegate;
+  dimension: Stage3UpsertDelegate;
+  dimensionValue: Stage3UpsertDelegate;
+  observation: Stage3UpsertDelegate;
+  observationDimensionValue: Stage3UpsertDelegate;
+  sourceReference: Stage3UpsertDelegate;
+  importIssue: Stage3UpsertDelegate;
   importRun: {
-    create(args: any): Promise<ImportRun>;
-    update(args: any): Promise<ImportRun>;
+    create(args: { data: unknown }): Promise<unknown>;
+    update(args: { where: { id: string }; data: unknown }): Promise<unknown>;
   };
   datasetRevision: {
-    findFirst(
-      args: any,
-    ): Promise<{ revision: number; checksum: string } | null>;
-    create(args: any): Promise<{ id: string }>;
+    findFirst(args: {
+      where: { datasetId: string };
+      orderBy?: { revision: "asc" | "desc" };
+    }): Promise<{ revision: number; checksum: string } | null>;
+    create(args: { data: unknown }): Promise<unknown>;
   };
 }
 
 interface Stage3Database {
-  $transaction<T>(callback: (transaction: any) => Promise<T>): Promise<T>;
+  $transaction<T>(callback: (transaction: Stage3Transaction) => Promise<T>): Promise<T>;
 }
 
-async function upsertAndCount<TRecord extends { id: string }>(
-  delegate: any,
-  uniqueKey: any,
-  createData: any,
-  updateData: any,
+async function upsertAndCount<TRecord extends Stage3Record>(
+  delegate: Stage3UpsertDelegate<TRecord>,
+  uniqueKey: unknown,
+  createData: unknown,
+  updateData: unknown,
 ): Promise<{ record: TRecord; created: boolean }> {
   const existing = await delegate.findUnique({ where: uniqueKey });
   const record = await delegate.upsert({
@@ -83,7 +94,7 @@ async function persistNormalizedImport(
   ]);
 
   return database.$transaction(async (transaction) => {
-    const importRun = await transaction.importRun.create({
+    const importRun = (await transaction.importRun.create({
       data: {
         id: importRunId,
         sourceSystem: normalized.sourceSystem,
@@ -101,7 +112,7 @@ async function persistNormalizedImport(
         sourceChecksum: normalized.sourceChecksum,
         summary: null,
       },
-    });
+    })) as ImportRun;
 
     let recordsCreated = 0;
     let recordsUpdated = 0;
@@ -226,6 +237,24 @@ async function persistNormalizedImport(
       recordsUpdated += result.created ? 0 : 1;
     }
 
+    for (const link of normalized.observationDimensionValues) {
+      const result = await upsertAndCount(
+        transaction.observationDimensionValue,
+        {
+          observationId_dimensionId: {
+            observationId: link.observationId,
+            dimensionId: link.dimensionId,
+          },
+        },
+        link,
+        {
+          dimensionValueId: link.dimensionValueId,
+        },
+      );
+      recordsCreated += result.created ? 1 : 0;
+      recordsUpdated += result.created ? 0 : 1;
+    }
+
     for (const sourceReference of normalized.sourceReferences) {
       const result = await upsertAndCount(
         transaction.sourceReference,
@@ -310,7 +339,7 @@ async function persistNormalizedImport(
       revisionCount,
     );
 
-    const finalImportRun = await transaction.importRun.update({
+    const finalImportRun = (await transaction.importRun.update({
       where: { id: importRun.id },
       data: {
         status,
@@ -320,7 +349,7 @@ async function persistNormalizedImport(
         recordsFailed: normalized.issues.length,
         summary,
       },
-    });
+    })) as ImportRun;
 
     return {
       rawSource,
@@ -344,6 +373,7 @@ export async function importStage3Source(
 
 export async function importSampleStage3Source(): Promise<Stage3ImportResult> {
   const { sampleStage3Source } = await import("./sample-source");
+  const { prisma } = await import("@/infrastructure/database/prisma");
   return importStage3Source(
     prisma as unknown as Stage3Database,
     sampleStage3Source,
