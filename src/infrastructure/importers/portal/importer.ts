@@ -123,13 +123,16 @@ async function scrapeDatasetPage(
   const sourceId = extractLastSegment(sourceUrl);
   const name = normalizeText(await page.locator("h1").textContent());
 
-  const paragraphs = await page.locator("main p").evaluateAll((nodes) =>
-    nodes
-      .map((node) => node.textContent?.replace(/\s+/g, " ").trim() ?? "")
-      .filter((value) => value.length > 0),
-  );
+  const paragraphs = await page
+    .locator("main p")
+    .evaluateAll((nodes) =>
+      nodes
+        .map((node) => node.textContent?.replace(/\s+/g, " ").trim() ?? "")
+        .filter((value) => value.length > 0),
+    );
 
-  const sourceNote = paragraphs.find((value) => value.includes("Source :")) ?? null;
+  const sourceNote =
+    paragraphs.find((value) => value.includes("Source :")) ?? null;
   const sourceLegend =
     paragraphs.find((value) => value.includes("colonnes colorées")) ?? null;
 
@@ -157,7 +160,8 @@ async function scrapeDatasetPage(
 
       const className = cells[0]?.className ?? "";
       const isGroupRow =
-        className.includes("bg-slate-50") && className.includes("font-semibold");
+        className.includes("bg-slate-50") &&
+        className.includes("font-semibold");
 
       if (isGroupRow || currentGroup === null) {
         currentGroup = label;
@@ -165,7 +169,9 @@ async function scrapeDatasetPage(
 
       rows.push({
         path:
-          currentGroup === label || !currentGroup ? [label] : [currentGroup, label],
+          currentGroup === label || !currentGroup
+            ? [label]
+            : [currentGroup, label],
         values: cells.slice(1).map((cell) => normalize(cell.textContent)),
       });
     }
@@ -191,13 +197,17 @@ async function scrapeDatasetPage(
   };
 }
 
-async function scrapePortalData(options: PortalImportOptions): Promise<readonly ScrapedCategory[]> {
+async function scrapePortalData(
+  options: PortalImportOptions,
+): Promise<readonly ScrapedCategory[]> {
   const baseUrl = options.baseUrl ?? DEFAULT_BASE_URL;
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     extraHTTPHeaders: {
       ...(options.cookie ? { cookie: options.cookie } : {}),
-      ...(options.authorization ? { authorization: options.authorization } : {}),
+      ...(options.authorization
+        ? { authorization: options.authorization }
+        : {}),
     },
   });
   const page = await context.newPage();
@@ -213,7 +223,9 @@ async function scrapePortalData(options: PortalImportOptions): Promise<readonly 
       await clickCardAndWait(page, categoryCard.index, /\/categories\/[^/]+$/);
       const categoryUrl = page.url();
       const categorySourceId = extractLastSegment(categoryUrl);
-      const categoryName = normalizeText(await page.locator("h1").textContent()) || categoryCard.title;
+      const categoryName =
+        normalizeText(await page.locator("h1").textContent()) ||
+        categoryCard.title;
 
       const themeCards = await collectCards(page);
       const themes: ScrapedTheme[] = [];
@@ -222,7 +234,9 @@ async function scrapePortalData(options: PortalImportOptions): Promise<readonly 
         await clickCardAndWait(page, themeCard.index, /\/themes\/[^/]+$/);
         const themeUrl = page.url();
         const themeSourceId = extractLastSegment(themeUrl);
-        const themeName = normalizeText(await page.locator("h1").textContent()) || themeCard.title;
+        const themeName =
+          normalizeText(await page.locator("h1").textContent()) ||
+          themeCard.title;
 
         const datasetCards = await collectCards(page);
         const datasets: ScrapedDataset[] = [];
@@ -278,10 +292,18 @@ async function scrapePortalData(options: PortalImportOptions): Promise<readonly 
 
 async function resetPortalSource(prisma: PrismaClient): Promise<void> {
   await prisma.$transaction([
-    prisma.observation.deleteMany({ where: { dataset: { sourceSystem: SOURCE_SYSTEM } } }),
-    prisma.dimensionValue.deleteMany({ where: { dimension: { dataset: { sourceSystem: SOURCE_SYSTEM } } } }),
-    prisma.dimension.deleteMany({ where: { dataset: { sourceSystem: SOURCE_SYSTEM } } }),
-    prisma.datasetMetadata.deleteMany({ where: { dataset: { sourceSystem: SOURCE_SYSTEM } } }),
+    prisma.observation.deleteMany({
+      where: { dataset: { sourceSystem: SOURCE_SYSTEM } },
+    }),
+    prisma.dimensionValue.deleteMany({
+      where: { dimension: { dataset: { sourceSystem: SOURCE_SYSTEM } } },
+    }),
+    prisma.dimension.deleteMany({
+      where: { dataset: { sourceSystem: SOURCE_SYSTEM } },
+    }),
+    prisma.datasetMetadata.deleteMany({
+      where: { dataset: { sourceSystem: SOURCE_SYSTEM } },
+    }),
     prisma.dataset.deleteMany({ where: { sourceSystem: SOURCE_SYSTEM } }),
     prisma.theme.deleteMany({ where: { sourceSystem: SOURCE_SYSTEM } }),
     prisma.category.deleteMany({ where: { sourceSystem: SOURCE_SYSTEM } }),
@@ -308,7 +330,9 @@ function countScrapedRows(categories: readonly ScrapedCategory[]): {
       datasets += theme.datasets.length;
       for (const dataset of theme.datasets) {
         observations += dataset.rows.length * dataset.columns.length;
-        const seriesCount = new Set(dataset.rows.map((row) => row.path.join(" / "))).size;
+        const seriesCount = new Set(
+          dataset.rows.map((row) => row.path.join(" / ")),
+        ).size;
         dimensionValues += dataset.columns.length + seriesCount;
       }
     }
@@ -362,9 +386,18 @@ export async function importPortalData(options: PortalImportOptions = {}) {
     });
 
     for (const category of categories) {
-      const categoryId = stableUuid([SOURCE_SYSTEM, "CATEGORY", category.sourceId]);
+      const categoryId = stableUuid([
+        SOURCE_SYSTEM,
+        "CATEGORY",
+        category.sourceId,
+      ]);
       await prisma.category.upsert({
-        where: { sourceSystem_sourceId: { sourceSystem: SOURCE_SYSTEM, sourceId: category.sourceId } },
+        where: {
+          sourceSystem_sourceId: {
+            sourceSystem: SOURCE_SYSTEM,
+            sourceId: category.sourceId,
+          },
+        },
         create: {
           id: categoryId,
           sourceSystem: SOURCE_SYSTEM,
@@ -386,7 +419,12 @@ export async function importPortalData(options: PortalImportOptions = {}) {
       for (const theme of category.themes) {
         const themeId = stableUuid([SOURCE_SYSTEM, "THEME", theme.sourceId]);
         await prisma.theme.upsert({
-          where: { sourceSystem_sourceId: { sourceSystem: SOURCE_SYSTEM, sourceId: theme.sourceId } },
+          where: {
+            sourceSystem_sourceId: {
+              sourceSystem: SOURCE_SYSTEM,
+              sourceId: theme.sourceId,
+            },
+          },
           create: {
             id: themeId,
             categoryId,
@@ -408,8 +446,16 @@ export async function importPortalData(options: PortalImportOptions = {}) {
           },
         });
         for (const dataset of theme.datasets) {
-          const datasetId = stableUuid([SOURCE_SYSTEM, "DATASET", dataset.sourceId]);
-          const metadataId = stableUuid([SOURCE_SYSTEM, "DATASET_METADATA", dataset.sourceId]);
+          const datasetId = stableUuid([
+            SOURCE_SYSTEM,
+            "DATASET",
+            dataset.sourceId,
+          ]);
+          const metadataId = stableUuid([
+            SOURCE_SYSTEM,
+            "DATASET_METADATA",
+            dataset.sourceId,
+          ]);
           const datasetChecksum = sha256Checksum({
             sourceId: dataset.sourceId,
             sourceUrl: dataset.sourceUrl,
@@ -538,26 +584,30 @@ export async function importPortalData(options: PortalImportOptions = {}) {
               skipDuplicates: true,
             });
 
-            const yearDimensionValues = dataset.columns.map((column, index) => ({
-              id: stableUuid([
-                SOURCE_SYSTEM,
-                "DIMENSION_VALUE",
-                dataset.sourceId,
-                "year",
-                column,
-              ]),
-              dimensionId: yearDimensionId,
-              sourceId: column,
-              code: column,
-              label: column,
-              position: index,
-              isActive: true,
-              sourceUpdatedAt: null,
-              sourcePublishedAt: null,
-            }));
+            const yearDimensionValues = dataset.columns.map(
+              (column, index) => ({
+                id: stableUuid([
+                  SOURCE_SYSTEM,
+                  "DIMENSION_VALUE",
+                  dataset.sourceId,
+                  "year",
+                  column,
+                ]),
+                dimensionId: yearDimensionId,
+                sourceId: column,
+                code: column,
+                label: column,
+                position: index,
+                isActive: true,
+                sourceUpdatedAt: null,
+                sourcePublishedAt: null,
+              }),
+            );
 
             const uniqueSeries = Array.from(
-              new Map(dataset.rows.map((row) => [row.path.join(" / "), row])).entries(),
+              new Map(
+                dataset.rows.map((row) => [row.path.join(" / "), row]),
+              ).entries(),
             ).map(([seriesCode, row], index) => ({
               id: stableUuid([
                 SOURCE_SYSTEM,
@@ -581,11 +631,16 @@ export async function importPortalData(options: PortalImportOptions = {}) {
               skipDuplicates: true,
             });
 
-            const yearValueByCode = new Map(yearDimensionValues.map((value) => [value.code, value]));
-            const seriesValueByCode = new Map(uniqueSeries.map((value) => [value.code, value]));
+            const yearValueByCode = new Map(
+              yearDimensionValues.map((value) => [value.code, value]),
+            );
+            const seriesValueByCode = new Map(
+              uniqueSeries.map((value) => [value.code, value]),
+            );
 
             const observationData: Prisma.ObservationCreateManyInput[] = [];
-            const observationDimensionValueData: Prisma.ObservationDimensionValueCreateManyInput[] = [];
+            const observationDimensionValueData: Prisma.ObservationDimensionValueCreateManyInput[] =
+              [];
 
             for (const row of dataset.rows) {
               const seriesCode = row.path.join(" / ");
@@ -594,8 +649,13 @@ export async function importPortalData(options: PortalImportOptions = {}) {
                 continue;
               }
 
-              for (let columnIndex = 0; columnIndex < dataset.columns.length; columnIndex += 1) {
-                const year = dataset.columns[columnIndex] ?? `column-${columnIndex + 1}`;
+              for (
+                let columnIndex = 0;
+                columnIndex < dataset.columns.length;
+                columnIndex += 1
+              ) {
+                const year =
+                  dataset.columns[columnIndex] ?? `column-${columnIndex + 1}`;
                 const yearValue = yearValueByCode.get(year);
                 if (!yearValue) {
                   continue;
@@ -618,7 +678,10 @@ export async function importPortalData(options: PortalImportOptions = {}) {
                   sourceId: observationId,
                   coordinate,
                   coordinateHash: sha256Checksum(coordinate),
-                  value: numericValue === null ? null : new Prisma.Decimal(numericValue),
+                  value:
+                    numericValue === null
+                      ? null
+                      : new Prisma.Decimal(numericValue),
                   rawValue,
                   status: null,
                   sourceUpdatedAt: null,
@@ -650,7 +713,6 @@ export async function importPortalData(options: PortalImportOptions = {}) {
               skipDuplicates: true,
             });
           });
-
         }
       }
     }
@@ -687,7 +749,9 @@ export async function importPortalData(options: PortalImportOptions = {}) {
 
     return {
       categories,
-      importRun: await prisma.importRun.findUnique({ where: { id: importRun.id } }),
+      importRun: await prisma.importRun.findUnique({
+        where: { id: importRun.id },
+      }),
     };
   } finally {
     await prisma.$disconnect();

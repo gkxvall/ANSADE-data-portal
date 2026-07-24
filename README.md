@@ -411,10 +411,16 @@ Create the local environment file:
 cp .env.example .env
 ```
 
+Start the local PostgreSQL container:
+
+```bash
+docker compose up -d
+```
+
 Configure PostgreSQL:
 
 ```env
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DATABASE?schema=public"
+DATABASE_URL="postgresql://ansade:ansade@localhost:5432/ansade?schema=public"
 DATA_SOURCE="postgres"
 NEXT_PUBLIC_APP_NAME="ANSADE Statistical Data Explorer"
 ```
@@ -441,6 +447,12 @@ Optionally load the development fixture:
 
 ```bash
 npm run prisma:seed
+```
+
+Import data from the ANSADE portal:
+
+```bash
+npm run import:portal
 ```
 
 Run the Stage 3 sample importer:
