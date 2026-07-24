@@ -18,6 +18,12 @@ interface CardSummary {
   readonly description: string | null;
 }
 
+interface DatasetCardSummary {
+  readonly index: number;
+  readonly title: string;
+  readonly description: string | null;
+}
+
 interface ScrapedCategory {
   readonly sourceId: string;
   readonly sourceUrl: string;
@@ -102,10 +108,70 @@ async function collectCards(page: Page): Promise<readonly CardSummary[]> {
   );
 }
 
+async function collectDatasetCards(
+  page: Page,
+): Promise<readonly DatasetCardSummary[]> {
+  return page
+    .locator('main button[title="Visualiser le tableau"]')
+    .evaluateAll((buttons) =>
+      buttons
+        .map((button, index) => {
+          const card =
+            button.closest("div.rounded-xl") ??
+            button.parentElement?.parentElement;
+          const title = card?.querySelector("h2")?.textContent ?? "";
+          const description = card?.querySelector("p")?.textContent ?? null;
+
+          return {
+            index,
+            title: title.replace(/\s+/g, " ").trim(),
+            description: description?.replace(/\s+/g, " ").trim() ?? null,
+          };
+        })
+        .filter((card) => card.title.length > 0),
+    );
+}
+
+async function waitForCategoryCards(page: Page): Promise<void> {
+  await page.waitForFunction(
+    () => document.querySelectorAll("h2").length > 0,
+    null,
+    { timeout: 10000 },
+  );
+}
+
+async function waitForDatasetCards(page: Page): Promise<void> {
+  await page.waitForFunction(
+    () =>
+      document.querySelectorAll('main button[title="Visualiser le tableau"]')
+        .length > 0,
+    null,
+    { timeout: 10000 },
+  );
+}
+
 async function clickCardAndWait(page: Page, index: number, route: RegExp) {
   await Promise.all([
     page.waitForURL(route),
-    page.locator("main button:has(h2)").nth(index).click(),
+    page
+      .locator("main button:has(h2)")
+      .nth(index)
+      .evaluate((element) => {
+        (element as HTMLButtonElement).click();
+      }),
+  ]);
+  await waitForCategoryCards(page);
+}
+
+async function clickDatasetAndWait(page: Page, index: number, route: RegExp) {
+  await Promise.all([
+    page.waitForURL(route),
+    page
+      .locator('main button[title="Visualiser le tableau"]')
+      .nth(index)
+      .evaluate((element) => {
+        (element as HTMLButtonElement).click();
+      }),
   ]);
 }
 
@@ -137,12 +203,9 @@ async function scrapeDatasetPage(
     paragraphs.find((value) => value.includes("colonnes colorées")) ?? null;
 
   const tableData = await page.locator("main table").evaluate((table) => {
-    const normalize = (value: string | null | undefined) =>
-      (value ?? "").replace(/\s+/g, " ").trim();
-
     const headers = Array.from(table.querySelectorAll("thead th"))
       .slice(1)
-      .map((cell) => normalize(cell.textContent));
+      .map((cell) => (cell.textContent ?? "").replace(/\s+/g, " ").trim());
 
     const rows: Array<{ path: string[]; values: string[] }> = [];
     let currentGroup: string | null = null;
@@ -153,7 +216,7 @@ async function scrapeDatasetPage(
         continue;
       }
 
-      const label = normalize(cells[0]?.textContent);
+      const label = (cells[0]?.textContent ?? "").replace(/\s+/g, " ").trim();
       if (!label) {
         continue;
       }
@@ -172,7 +235,9 @@ async function scrapeDatasetPage(
           currentGroup === label || !currentGroup
             ? [label]
             : [currentGroup, label],
-        values: cells.slice(1).map((cell) => normalize(cell.textContent)),
+        values: cells
+          .slice(1)
+          .map((cell) => (cell.textContent ?? "").replace(/\s+/g, " ").trim()),
       });
     }
 
@@ -215,6 +280,7 @@ async function scrapePortalData(
   try {
     const categoriesUrl = new URL("/categories", baseUrl).toString();
     await page.goto(categoriesUrl, { waitUntil: "networkidle" });
+    await waitForCategoryCards(page);
 
     const categoryCards = await collectCards(page);
     const categories: ScrapedCategory[] = [];
@@ -238,11 +304,16 @@ async function scrapePortalData(
           normalizeText(await page.locator("h1").textContent()) ||
           themeCard.title;
 
-        const datasetCards = await collectCards(page);
+        await waitForDatasetCards(page);
+        const datasetCards = await collectDatasetCards(page);
         const datasets: ScrapedDataset[] = [];
 
         for (const datasetCard of datasetCards) {
-          await clickCardAndWait(page, datasetCard.index, /\/tableaux\/[^/]+$/);
+          await clickDatasetAndWait(
+            page,
+            datasetCard.index,
+            /\/tableaux\/[^/]+$/,
+          );
 
           datasets.push(
             await scrapeDatasetPage(page, {
@@ -255,6 +326,7 @@ async function scrapePortalData(
           );
 
           await page.goto(themeUrl, { waitUntil: "networkidle" });
+          await waitForDatasetCards(page);
         }
 
         themes.push({
@@ -269,6 +341,7 @@ async function scrapePortalData(
         });
 
         await page.goto(categoryUrl, { waitUntil: "networkidle" });
+        await waitForCategoryCards(page);
       }
 
       categories.push({
@@ -280,6 +353,7 @@ async function scrapePortalData(
       });
 
       await page.goto(categoriesUrl, { waitUntil: "networkidle" });
+      await waitForCategoryCards(page);
     }
 
     return categories;
@@ -381,7 +455,7 @@ export async function importPortalData(options: PortalImportOptions = {}) {
         recordsUpdated: 0,
         recordsFailed: 0,
         sourceChecksum,
-        summary: Prisma.JsonNull,
+        summary: {},
       },
     });
 
@@ -663,6 +737,8 @@ export async function importPortalData(options: PortalImportOptions = {}) {
 
                 const rawValue = row.values[columnIndex] ?? null;
                 const numericValue = parseNumber(rawValue);
+                const status =
+                  numericValue === null && rawValue === null ? "EMPTY" : null;
                 const coordinate = { year, series: seriesCode };
                 const observationId = stableUuid([
                   SOURCE_SYSTEM,
@@ -683,7 +759,7 @@ export async function importPortalData(options: PortalImportOptions = {}) {
                       ? null
                       : new Prisma.Decimal(numericValue),
                   rawValue,
-                  status: null,
+                  status,
                   sourceUpdatedAt: null,
                   sourcePublishedAt: null,
                 });

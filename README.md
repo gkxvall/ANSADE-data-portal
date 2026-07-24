@@ -420,7 +420,7 @@ docker compose up -d
 Configure PostgreSQL:
 
 ```env
-DATABASE_URL="postgresql://ansade:ansade@localhost:5432/ansade?schema=public"
+DATABASE_URL="postgresql://ansade:ansade@localhost:5433/ansade?schema=public"
 DATA_SOURCE="postgres"
 NEXT_PUBLIC_APP_NAME="ANSADE Statistical Data Explorer"
 ```

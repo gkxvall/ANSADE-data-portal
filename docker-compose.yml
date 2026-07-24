@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: ansade
       POSTGRES_DB: ansade
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - ansade_postgres_data:/var/lib/postgresql/data
     healthcheck:
