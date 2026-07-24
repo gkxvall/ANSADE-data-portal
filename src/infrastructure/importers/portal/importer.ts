@@ -6,6 +6,10 @@ import { sha256Checksum, stableUuid } from "../stage-3/checksum";
 const SOURCE_SYSTEM = "ansade-portal";
 const DEFAULT_BASE_URL = "https://portail.ansade.mr";
 
+function progress(message: string): void {
+  console.info(`[portal-import] ${message}`);
+}
+
 interface PortalImportOptions {
   readonly baseUrl?: string;
   readonly cookie?: string | null;
@@ -266,6 +270,7 @@ async function scrapePortalData(
   options: PortalImportOptions,
 ): Promise<readonly ScrapedCategory[]> {
   const baseUrl = options.baseUrl ?? DEFAULT_BASE_URL;
+  progress(`Starting crawl at ${baseUrl}`);
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     extraHTTPHeaders: {
@@ -283,9 +288,13 @@ async function scrapePortalData(
     await waitForCategoryCards(page);
 
     const categoryCards = await collectCards(page);
+    progress(`Found ${categoryCards.length} categories`);
     const categories: ScrapedCategory[] = [];
 
-    for (const categoryCard of categoryCards) {
+    for (const [categoryIndex, categoryCard] of categoryCards.entries()) {
+      progress(
+        `Category ${categoryIndex + 1}/${categoryCards.length}: ${categoryCard.title}`,
+      );
       await clickCardAndWait(page, categoryCard.index, /\/categories\/[^/]+$/);
       const categoryUrl = page.url();
       const categorySourceId = extractLastSegment(categoryUrl);
@@ -294,9 +303,13 @@ async function scrapePortalData(
         categoryCard.title;
 
       const themeCards = await collectCards(page);
+      progress(`  Found ${themeCards.length} themes in ${categoryName}`);
       const themes: ScrapedTheme[] = [];
 
-      for (const themeCard of themeCards) {
+      for (const [themeIndex, themeCard] of themeCards.entries()) {
+        progress(
+          `  Theme ${themeIndex + 1}/${themeCards.length}: ${themeCard.title}`,
+        );
         await clickCardAndWait(page, themeCard.index, /\/themes\/[^/]+$/);
         const themeUrl = page.url();
         const themeSourceId = extractLastSegment(themeUrl);
@@ -306,9 +319,15 @@ async function scrapePortalData(
 
         await waitForDatasetCards(page);
         const datasetCards = await collectDatasetCards(page);
+        progress(
+          `    Found ${datasetCards.length} datasets in theme ${themeName}`,
+        );
         const datasets: ScrapedDataset[] = [];
 
-        for (const datasetCard of datasetCards) {
+        for (const [datasetIndex, datasetCard] of datasetCards.entries()) {
+          progress(
+            `    Dataset ${datasetIndex + 1}/${datasetCards.length}: ${datasetCard.title}`,
+          );
           await clickDatasetAndWait(
             page,
             datasetCard.index,
@@ -356,6 +375,7 @@ async function scrapePortalData(
       await waitForCategoryCards(page);
     }
 
+    progress("Crawl phase completed");
     return categories;
   } finally {
     await page.close();
@@ -427,8 +447,12 @@ export async function importPortalData(options: PortalImportOptions = {}) {
   const startedAt = new Date();
 
   try {
+    progress("Import pipeline started");
     const categories = await scrapePortalData(options);
     const counts = countScrapedRows(categories);
+    progress(
+      `Scrape summary: categories=${counts.categories}, themes=${counts.themes}, datasets=${counts.datasets}, observations=${counts.observations}`,
+    );
     const sourceChecksum = sha256Checksum(categories);
     const importRunId = stableUuid([
       SOURCE_SYSTEM,
@@ -438,6 +462,7 @@ export async function importPortalData(options: PortalImportOptions = {}) {
     ]);
 
     await resetPortalSource(prisma);
+    progress("Cleared existing ansade-portal records");
 
     const importRun = await prisma.importRun.create({
       data: {
@@ -459,7 +484,10 @@ export async function importPortalData(options: PortalImportOptions = {}) {
       },
     });
 
-    for (const category of categories) {
+    for (const [categoryIndex, category] of categories.entries()) {
+      progress(
+        `Persisting category ${categoryIndex + 1}/${categories.length}: ${category.name}`,
+      );
       const categoryId = stableUuid([
         SOURCE_SYSTEM,
         "CATEGORY",
@@ -490,7 +518,10 @@ export async function importPortalData(options: PortalImportOptions = {}) {
           isActive: true,
         },
       });
-      for (const theme of category.themes) {
+      for (const [themeIndex, theme] of category.themes.entries()) {
+        progress(
+          `  Persisting theme ${themeIndex + 1}/${category.themes.length}: ${theme.name}`,
+        );
         const themeId = stableUuid([SOURCE_SYSTEM, "THEME", theme.sourceId]);
         await prisma.theme.upsert({
           where: {
@@ -519,7 +550,10 @@ export async function importPortalData(options: PortalImportOptions = {}) {
             isActive: true,
           },
         });
-        for (const dataset of theme.datasets) {
+        for (const [datasetIndex, dataset] of theme.datasets.entries()) {
+          progress(
+            `    Persisting dataset ${datasetIndex + 1}/${theme.datasets.length}: ${dataset.name}`,
+          );
           const datasetId = stableUuid([
             SOURCE_SYSTEM,
             "DATASET",
@@ -822,6 +856,8 @@ export async function importPortalData(options: PortalImportOptions = {}) {
         },
       },
     });
+
+    progress("Import pipeline completed successfully");
 
     return {
       categories,
