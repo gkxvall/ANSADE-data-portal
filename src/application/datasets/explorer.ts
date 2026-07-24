@@ -1,13 +1,11 @@
-import type { DatasetCatalogueItem, DatasetDetail } from "@/domain/repositories";
+import type {
+  DatasetCatalogueItem,
+  DatasetDetail,
+} from "@/domain/repositories";
 import type { Observation } from "@/domain/entities";
 
 export type DatasetExplorerChartType =
-  | "line"
-  | "bar"
-  | "area"
-  | "pie"
-  | "scatter"
-  | "kpi";
+  "line" | "bar" | "area" | "pie" | "scatter" | "kpi";
 
 export type DatasetExplorerSortMode = "value-desc" | "value-asc" | "dimension";
 
@@ -162,15 +160,21 @@ export function buildExplorerState(
   const pageSize = normalizePositiveInteger(searchParams.pageSize, 8);
   const sortMode = normalizeSortMode(searchParams.sort);
   const chartType = normalizeChartType(searchParams.chart);
-  const xDimensionKey = typeof searchParams.x === "string" && dimensions.some((dimension) => dimension.key === searchParams.x)
-    ? searchParams.x
-    : firstDimension?.key ?? "value";
-  const seriesDimensionKey = typeof searchParams.series === "string" && dimensions.some((dimension) => dimension.key === searchParams.series)
-    ? searchParams.series
-    : null;
-  const compareDimensionKey = typeof searchParams.compare === "string" && dimensions.some((dimension) => dimension.key === searchParams.compare)
-    ? searchParams.compare
-    : null;
+  const xDimensionKey =
+    typeof searchParams.x === "string" &&
+    dimensions.some((dimension) => dimension.key === searchParams.x)
+      ? searchParams.x
+      : (firstDimension?.key ?? "value");
+  const seriesDimensionKey =
+    typeof searchParams.series === "string" &&
+    dimensions.some((dimension) => dimension.key === searchParams.series)
+      ? searchParams.series
+      : null;
+  const compareDimensionKey =
+    typeof searchParams.compare === "string" &&
+    dimensions.some((dimension) => dimension.key === searchParams.compare)
+      ? searchParams.compare
+      : null;
   const visibleDimensionKeys = parseCsv(searchParams.visible).filter((key) =>
     dimensions.some((dimension) => dimension.key === key),
   );
@@ -217,7 +221,8 @@ export function buildExplorerUrl(
   if (state.chartType !== "bar") params.set("chart", state.chartType);
   if (state.xDimensionKey) params.set("x", state.xDimensionKey);
   if (state.seriesDimensionKey) params.set("series", state.seriesDimensionKey);
-  if (state.compareDimensionKey) params.set("compare", state.compareDimensionKey);
+  if (state.compareDimensionKey)
+    params.set("compare", state.compareDimensionKey);
   if (state.visibleDimensionKeys.length > 0) {
     params.set("visible", state.visibleDimensionKeys.join(","));
   }
@@ -239,7 +244,9 @@ export function filterObservations(
   const query = state.query.toLowerCase();
 
   return observations.filter((observation) => {
-    const coordinateText = Object.values(observation.coordinate).join(" ").toLowerCase();
+    const coordinateText = Object.values(observation.coordinate)
+      .join(" ")
+      .toLowerCase();
     const matchesQuery =
       !query ||
       coordinateText.includes(query) ||
@@ -263,7 +270,11 @@ export function sortObservations(
 
   switch (state.sortMode) {
     case "value-asc":
-      return sorted.sort((left, right) => (left.value ?? Number.POSITIVE_INFINITY) - (right.value ?? Number.POSITIVE_INFINITY));
+      return sorted.sort(
+        (left, right) =>
+          (left.value ?? Number.POSITIVE_INFINITY) -
+          (right.value ?? Number.POSITIVE_INFINITY),
+      );
     case "dimension":
       return sorted.sort((left, right) => {
         const leftValue = left.coordinate[state.xDimensionKey] ?? "";
@@ -272,7 +283,11 @@ export function sortObservations(
       });
     case "value-desc":
     default:
-      return sorted.sort((left, right) => (right.value ?? Number.NEGATIVE_INFINITY) - (left.value ?? Number.NEGATIVE_INFINITY));
+      return sorted.sort(
+        (left, right) =>
+          (right.value ?? Number.NEGATIVE_INFINITY) -
+          (left.value ?? Number.NEGATIVE_INFINITY),
+      );
   }
 }
 
@@ -309,7 +324,7 @@ export function buildChartModel(
         y: observation.value,
       }))
       .filter((point) => Number.isFinite(point.x) && point.y !== null)
-       .map((point) => ({
+      .map((point) => ({
         label: String(point.x),
         value: Number(point.y),
         count: 1,
@@ -330,12 +345,16 @@ export function buildChartModel(
     };
   }
 
-  const seriesMap = new Map<string, Map<string, { value: number; count: number }>>();
+  const seriesMap = new Map<
+    string,
+    Map<string, { value: number; count: number }>
+  >();
 
   for (const observation of observations) {
-    const xValue = observation.coordinate[state.xDimensionKey] ?? "(sans valeur)";
+    const xValue =
+      observation.coordinate[state.xDimensionKey] ?? "(sans valeur)";
     const seriesName = state.seriesDimensionKey
-      ? observation.coordinate[state.seriesDimensionKey] ?? "(sans série)"
+      ? (observation.coordinate[state.seriesDimensionKey] ?? "(sans série)")
       : "Valeur";
     const value = observation.value ?? 0;
 
@@ -358,11 +377,12 @@ export function buildChartModel(
       .sort((left, right) => left.label.localeCompare(right.label, "fr")),
   }));
 
-  const reason = state.chartType === "pie"
-    ? observations.some((observation) => observation.value !== null)
-      ? null
-      : "Le diagramme circulaire nécessite au moins une valeur numérique."
-    : null;
+  const reason =
+    state.chartType === "pie"
+      ? observations.some((observation) => observation.value !== null)
+        ? null
+        : "Le diagramme circulaire nécessite au moins une valeur numérique."
+      : null;
 
   return {
     available: reason === null,
@@ -442,7 +462,9 @@ function normalizePositiveInteger(
   return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
 }
 
-function normalizeSortMode(value: string | string[] | undefined): DatasetExplorerSortMode {
+function normalizeSortMode(
+  value: string | string[] | undefined,
+): DatasetExplorerSortMode {
   const rawValue = Array.isArray(value) ? value[0] : value;
 
   switch (rawValue) {
@@ -455,7 +477,9 @@ function normalizeSortMode(value: string | string[] | undefined): DatasetExplore
   }
 }
 
-function normalizeChartType(value: string | string[] | undefined): DatasetExplorerChartType {
+function normalizeChartType(
+  value: string | string[] | undefined,
+): DatasetExplorerChartType {
   const rawValue = Array.isArray(value) ? value[0] : value;
 
   switch (rawValue) {

@@ -27,7 +27,7 @@ export default async function CategoryPage({
         ]}
       />
 
-      <section className="rounded-[1.75rem] border border-sand-100 bg-white p-6 shadow-card sm:p-8">
+      <section className="border-sand-100 shadow-card rounded-[1.75rem] border bg-white p-6 sm:p-8">
         <p className="text-brand-700 text-xs font-semibold tracking-[0.14em] uppercase">
           Catégorie
         </p>

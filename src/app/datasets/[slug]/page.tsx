@@ -22,7 +22,9 @@ export default async function DatasetPage({
   searchParams,
 }: {
   readonly params: Promise<{ slug: string }>;
-  readonly searchParams: Promise<Readonly<Record<string, string | string[] | undefined>>>;
+  readonly searchParams: Promise<
+    Readonly<Record<string, string | string[] | undefined>>
+  >;
 }) {
   const { slug } = await params;
   const [resolvedSearchParams, model] = await Promise.all([
@@ -47,13 +49,16 @@ export default async function DatasetPage({
         items={[
           { label: "Accueil", href: "/" },
           { label: "Catégories", href: "/categories" },
-          { label: dataset.categoryName, href: `/categories/${dataset.categorySlug}` },
+          {
+            label: dataset.categoryName,
+            href: `/categories/${dataset.categorySlug}`,
+          },
           { label: dataset.themeName, href: `/themes/${dataset.themeSlug}` },
           { label: dataset.title },
         ]}
       />
 
-      <section className="rounded-[1.75rem] border border-sand-100 bg-white p-6 shadow-card sm:p-8">
+      <section className="border-sand-100 shadow-card rounded-[1.75rem] border bg-white p-6 sm:p-8">
         <p className="text-brand-700 text-xs font-semibold tracking-[0.14em] uppercase">
           Jeu de données
         </p>
@@ -65,21 +70,27 @@ export default async function DatasetPage({
             <p className="text-navy-500 mt-3 max-w-3xl text-base leading-7">
               {dataset.description ?? "Description indisponible."}
             </p>
-            <div className="mt-6 flex flex-wrap gap-2 text-xs font-semibold text-navy-700">
-              <span className="rounded-full bg-sand-50 px-3 py-1.5">{dataset.categoryName}</span>
-              <span className="rounded-full bg-sand-50 px-3 py-1.5">{dataset.themeName}</span>
-              <span className="rounded-full bg-sand-50 px-3 py-1.5">
+            <div className="text-navy-700 mt-6 flex flex-wrap gap-2 text-xs font-semibold">
+              <span className="bg-sand-50 rounded-full px-3 py-1.5">
+                {dataset.categoryName}
+              </span>
+              <span className="bg-sand-50 rounded-full px-3 py-1.5">
+                {dataset.themeName}
+              </span>
+              <span className="bg-sand-50 rounded-full px-3 py-1.5">
                 {dataset.observationCount.toLocaleString("fr-FR")} observations
               </span>
             </div>
           </div>
 
-          <div className="rounded-[1.25rem] border border-sand-100 bg-sand-50 p-5 text-sm text-navy-700">
-            <p className="font-semibold text-navy-900">Métadonnées</p>
+          <div className="border-sand-100 bg-sand-50 text-navy-700 rounded-[1.25rem] border p-5 text-sm">
+            <p className="text-navy-900 font-semibold">Métadonnées</p>
             <dl className="mt-3 space-y-2">
               <div className="flex justify-between gap-3">
                 <dt>Organisation</dt>
-                <dd className="font-medium">{dataset.sourceOrganization ?? "Non renseignée"}</dd>
+                <dd className="font-medium">
+                  {dataset.sourceOrganization ?? "Non renseignée"}
+                </dd>
               </div>
               <div className="flex justify-between gap-3">
                 <dt>Statut</dt>
@@ -87,18 +98,25 @@ export default async function DatasetPage({
               </div>
               <div className="flex justify-between gap-3">
                 <dt>Mise à jour</dt>
-                <dd className="font-medium">{formatDate(dataset.sourceUpdatedAt)}</dd>
+                <dd className="font-medium">
+                  {formatDate(dataset.sourceUpdatedAt)}
+                </dd>
               </div>
               <div className="flex justify-between gap-3">
                 <dt>Publication</dt>
-                <dd className="font-medium">{formatDate(dataset.sourcePublishedAt)}</dd>
+                <dd className="font-medium">
+                  {formatDate(dataset.sourcePublishedAt)}
+                </dd>
               </div>
             </dl>
           </div>
         </div>
       </section>
 
-      <DatasetExplorer data={explorerData} searchParams={resolvedSearchParams} />
+      <DatasetExplorer
+        data={explorerData}
+        searchParams={resolvedSearchParams}
+      />
 
       {relatedDatasets.length > 0 ? (
         <section className="space-y-4">

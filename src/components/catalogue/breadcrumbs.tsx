@@ -17,13 +17,21 @@ export function CatalogueBreadcrumbs({
           const isLast = index === items.length - 1;
 
           return (
-            <li key={`${item.label}-${index}`} className="flex items-center gap-2">
+            <li
+              key={`${item.label}-${index}`}
+              className="flex items-center gap-2"
+            >
               {item.href && !isLast ? (
-                <Link className="hover:text-brand-700 transition-colors" href={item.href}>
+                <Link
+                  className="hover:text-brand-700 transition-colors"
+                  href={item.href}
+                >
                   {item.label}
                 </Link>
               ) : (
-                <span className={isLast ? "text-navy-900 font-semibold" : undefined}>
+                <span
+                  className={isLast ? "text-navy-900 font-semibold" : undefined}
+                >
                   {item.label}
                 </span>
               )}

@@ -12,7 +12,8 @@ export function createApiDataProvider(): DataProvider {
   return {
     categories: {
       listCategories: async () => notImplemented("categories.listCategories"),
-      getCategoryBySlug: async () => notImplemented("categories.getCategoryBySlug"),
+      getCategoryBySlug: async () =>
+        notImplemented("categories.getCategoryBySlug"),
     },
     themes: {
       listThemes: async () => notImplemented("themes.listThemes"),

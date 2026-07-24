@@ -25,7 +25,9 @@ export function DatasetExplorer({
   searchParams,
 }: {
   readonly data: DatasetExplorerData;
-  readonly searchParams: Readonly<Record<string, string | string[] | undefined>>;
+  readonly searchParams: Readonly<
+    Record<string, string | string[] | undefined>
+  >;
 }) {
   const router = useRouter();
   const [state, setState] = useState<DatasetExplorerState>(() =>
@@ -144,7 +146,7 @@ export function DatasetExplorer({
   return (
     <div className="space-y-8">
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.8fr)]">
-        <div className="rounded-[1.5rem] border border-sand-100 bg-white p-6 shadow-card">
+        <div className="border-sand-100 shadow-card rounded-[1.5rem] border bg-white p-6">
           <p className="text-brand-700 text-xs font-semibold tracking-[0.14em] uppercase">
             Filtres dynamiques
           </p>
@@ -153,22 +155,25 @@ export function DatasetExplorer({
           </h2>
 
           <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            <label className="flex flex-col gap-1 text-sm font-semibold text-navy-800">
+            <label className="text-navy-800 flex flex-col gap-1 text-sm font-semibold">
               Rechercher
               <input
-                className="rounded-xl border border-sand-200 px-3 py-2.5 text-sm font-normal"
+                className="border-sand-200 rounded-xl border px-3 py-2.5 text-sm font-normal"
                 value={state.query}
                 onChange={(event) => updateState({ query: event.target.value })}
                 placeholder="Filtrer dans les coordonnées, statuts ou valeurs brutes"
               />
             </label>
-            <label className="flex flex-col gap-1 text-sm font-semibold text-navy-800">
+            <label className="text-navy-800 flex flex-col gap-1 text-sm font-semibold">
               Trier
               <select
-                className="rounded-xl border border-sand-200 px-3 py-2.5 text-sm font-normal"
+                className="border-sand-200 rounded-xl border px-3 py-2.5 text-sm font-normal"
                 value={state.sortMode}
                 onChange={(event) =>
-                  updateState({ sortMode: event.target.value as DatasetExplorerState["sortMode"] })
+                  updateState({
+                    sortMode: event.target
+                      .value as DatasetExplorerState["sortMode"],
+                  })
                 }
               >
                 <option value="value-desc">Valeur décroissante</option>
@@ -176,10 +181,10 @@ export function DatasetExplorer({
                 <option value="dimension">Dimension X</option>
               </select>
             </label>
-            <label className="flex flex-col gap-1 text-sm font-semibold text-navy-800">
+            <label className="text-navy-800 flex flex-col gap-1 text-sm font-semibold">
               Lignes par page
               <select
-                className="rounded-xl border border-sand-200 px-3 py-2.5 text-sm font-normal"
+                className="border-sand-200 rounded-xl border px-3 py-2.5 text-sm font-normal"
                 value={state.pageSize}
                 onChange={(event) =>
                   updateState({ pageSize: Number(event.target.value), page: 1 })
@@ -196,7 +201,7 @@ export function DatasetExplorer({
             {data.dimensions.map((dimension) => (
               <button
                 key={dimension.key}
-                className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${state.visibleDimensionKeys.includes(dimension.key) ? "border-brand-500 bg-brand-50 text-brand-800" : "border-sand-200 bg-white text-navy-600"}`}
+                className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${state.visibleDimensionKeys.includes(dimension.key) ? "border-brand-500 bg-brand-50 text-brand-800" : "border-sand-200 text-navy-600 bg-white"}`}
                 onClick={() => toggleDimensionVisibility(dimension.key)}
                 type="button"
               >
@@ -207,10 +212,15 @@ export function DatasetExplorer({
 
           <div className="mt-5 flex flex-wrap gap-2">
             {data.dimensions.map((dimension) => (
-              <label key={dimension.key} className="flex items-center gap-2 rounded-full border border-sand-100 bg-sand-50 px-3 py-1.5 text-xs">
-                <span className="font-semibold text-navy-900">{dimension.label}</span>
+              <label
+                key={dimension.key}
+                className="border-sand-100 bg-sand-50 flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs"
+              >
+                <span className="text-navy-900 font-semibold">
+                  {dimension.label}
+                </span>
                 <select
-                  className="rounded-full border border-sand-200 bg-white px-2 py-1 text-xs"
+                  className="border-sand-200 rounded-full border bg-white px-2 py-1 text-xs"
                   value={state.filters[dimension.key] ?? ""}
                   onChange={(event) =>
                     updateState({
@@ -244,18 +254,34 @@ export function DatasetExplorer({
           </div>
         </div>
 
-        <div className="rounded-[1.5rem] border border-sand-100 bg-white p-6 shadow-card">
+        <div className="border-sand-100 shadow-card rounded-[1.5rem] border bg-white p-6">
           <p className="text-brand-700 text-xs font-semibold tracking-[0.14em] uppercase">
             Aperçu
           </p>
           <h2 className="text-navy-900 mt-1 text-2xl font-semibold tracking-[-0.02em]">
             État du filtre
           </h2>
-          <div className="mt-4 space-y-2 text-sm text-navy-700">
-            <p><span className="font-semibold text-navy-900">Correspondances:</span> {filtered.length}</p>
-            <p><span className="font-semibold text-navy-900">Page active:</span> {state.page}</p>
-            <p><span className="font-semibold text-navy-900">Page size:</span> {state.pageSize}</p>
-            <p><span className="font-semibold text-navy-900">Colonnes visibles:</span> {state.visibleDimensionKeys.length}</p>
+          <div className="text-navy-700 mt-4 space-y-2 text-sm">
+            <p>
+              <span className="text-navy-900 font-semibold">
+                Correspondances:
+              </span>{" "}
+              {filtered.length}
+            </p>
+            <p>
+              <span className="text-navy-900 font-semibold">Page active:</span>{" "}
+              {state.page}
+            </p>
+            <p>
+              <span className="text-navy-900 font-semibold">Page size:</span>{" "}
+              {state.pageSize}
+            </p>
+            <p>
+              <span className="text-navy-900 font-semibold">
+                Colonnes visibles:
+              </span>{" "}
+              {state.visibleDimensionKeys.length}
+            </p>
           </div>
           <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
             {data.relatedDatasets.slice(0, 3).map((dataset) => (
@@ -287,7 +313,7 @@ export function DatasetExplorer({
         onExportPng={exportPng}
       />
 
-      <section className="rounded-[1.5rem] border border-sand-100 bg-white p-6 shadow-card">
+      <section className="border-sand-100 shadow-card rounded-[1.5rem] border bg-white p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-brand-700 text-xs font-semibold tracking-[0.14em] uppercase">
@@ -302,13 +328,15 @@ export function DatasetExplorer({
           </div>
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-[1rem] border border-sand-100">
+        <div className="border-sand-100 mt-4 overflow-hidden rounded-[1rem] border">
           <table className="w-full text-left text-sm">
             <thead className="bg-sand-50 text-navy-600">
               <tr>
                 <th className="px-4 py-3 font-semibold">Statut</th>
                 {data.dimensions
-                  .filter((dimension) => state.visibleDimensionKeys.includes(dimension.key))
+                  .filter((dimension) =>
+                    state.visibleDimensionKeys.includes(dimension.key),
+                  )
                   .map((dimension) => (
                     <th key={dimension.key} className="px-4 py-3 font-semibold">
                       {dimension.label}
@@ -320,21 +348,30 @@ export function DatasetExplorer({
             </thead>
             <tbody>
               {visibleObservations.map((observation) => (
-                <tr key={observation.id} className="border-t border-sand-100">
-                  <td className="px-4 py-3 align-top text-navy-700">{observation.status ?? "—"}</td>
+                <tr key={observation.id} className="border-sand-100 border-t">
+                  <td className="text-navy-700 px-4 py-3 align-top">
+                    {observation.status ?? "—"}
+                  </td>
                   {data.dimensions
-                    .filter((dimension) => state.visibleDimensionKeys.includes(dimension.key))
+                    .filter((dimension) =>
+                      state.visibleDimensionKeys.includes(dimension.key),
+                    )
                     .map((dimension) => (
-                      <td key={dimension.key} className="px-4 py-3 align-top text-navy-700">
+                      <td
+                        key={dimension.key}
+                        className="text-navy-700 px-4 py-3 align-top"
+                      >
                         {observation.coordinate[dimension.key] ?? "—"}
                       </td>
                     ))}
-                  <td className="px-4 py-3 align-top text-navy-700">
+                  <td className="text-navy-700 px-4 py-3 align-top">
                     {observation.value ?? observation.rawValue ?? "N/D"}
                   </td>
-                  <td className="px-4 py-3 align-top text-navy-700">
-                    <span className="rounded-full bg-sand-50 px-2 py-1 text-xs font-semibold">
-                      {observation.value === null ? "Valeur brute" : "Numérique"}
+                  <td className="text-navy-700 px-4 py-3 align-top">
+                    <span className="bg-sand-50 rounded-full px-2 py-1 text-xs font-semibold">
+                      {observation.value === null
+                        ? "Valeur brute"
+                        : "Numérique"}
                     </span>
                   </td>
                 </tr>
@@ -345,7 +382,7 @@ export function DatasetExplorer({
 
         <div className="mt-4 flex items-center justify-between gap-3">
           <button
-            className="rounded-full border border-sand-200 bg-white px-4 py-2 text-sm font-semibold"
+            className="border-sand-200 rounded-full border bg-white px-4 py-2 text-sm font-semibold"
             onClick={() => updateState({ page: Math.max(1, state.page - 1) })}
             type="button"
           >
@@ -353,8 +390,10 @@ export function DatasetExplorer({
           </button>
           <span className="text-navy-500 text-sm">Page {state.page}</span>
           <button
-            className="rounded-full border border-sand-200 bg-white px-4 py-2 text-sm font-semibold"
-            onClick={() => updateState({ page: hasMore ? state.page + 1 : state.page })}
+            className="border-sand-200 rounded-full border bg-white px-4 py-2 text-sm font-semibold"
+            onClick={() =>
+              updateState({ page: hasMore ? state.page + 1 : state.page })
+            }
             type="button"
           >
             Suivant
@@ -362,7 +401,7 @@ export function DatasetExplorer({
         </div>
       </section>
 
-      <section className="rounded-[1.5rem] border border-sand-100 bg-white p-6 shadow-card">
+      <section className="border-sand-100 shadow-card rounded-[1.5rem] border bg-white p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-brand-700 text-xs font-semibold tracking-[0.14em] uppercase">
@@ -372,10 +411,10 @@ export function DatasetExplorer({
               Workspace de comparaison
             </h2>
           </div>
-          <label className="flex items-center gap-2 text-sm font-semibold text-navy-800">
+          <label className="text-navy-800 flex items-center gap-2 text-sm font-semibold">
             Dimension
             <select
-              className="rounded-xl border border-sand-200 px-3 py-2.5 text-sm font-normal"
+              className="border-sand-200 rounded-xl border px-3 py-2.5 text-sm font-normal"
               value={state.compareDimensionKey ?? ""}
               onChange={(event) =>
                 updateState({ compareDimensionKey: event.target.value || null })
@@ -392,13 +431,16 @@ export function DatasetExplorer({
         </div>
 
         {!comparisonModel.available ? (
-          <div className="mt-4 rounded-xl border border-sand-100 bg-sand-50 p-4 text-sm text-navy-600">
+          <div className="border-sand-100 bg-sand-50 text-navy-600 mt-4 rounded-xl border p-4 text-sm">
             {comparisonModel.reason}
           </div>
         ) : (
           <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {comparisonModel.groups.map((group) => (
-              <article key={group.label} className="rounded-card border-navy-100 border bg-white p-5">
+              <article
+                key={group.label}
+                className="rounded-card border-navy-100 border bg-white p-5"
+              >
                 <p className="text-brand-700 text-xs font-semibold tracking-[0.14em] uppercase">
                   {group.label}
                 </p>
@@ -406,7 +448,10 @@ export function DatasetExplorer({
                   {group.total.toLocaleString("fr-FR")}
                 </p>
                 <p className="text-navy-500 mt-1 text-sm">
-                  {group.count} observations, moyenne {group.average.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}
+                  {group.count} observations, moyenne{" "}
+                  {group.average.toLocaleString("fr-FR", {
+                    maximumFractionDigits: 2,
+                  })}
                 </p>
               </article>
             ))}

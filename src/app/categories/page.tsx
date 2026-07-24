@@ -9,7 +9,7 @@ export default async function CategoriesPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[90rem] flex-col gap-8 p-4 sm:p-6 lg:p-8">
-      <section className="rounded-[1.75rem] border border-sand-100 bg-white p-6 shadow-card sm:p-8">
+      <section className="border-sand-100 shadow-card rounded-[1.75rem] border bg-white p-6 sm:p-8">
         <p className="text-brand-700 text-xs font-semibold tracking-[0.14em] uppercase">
           Catalogue
         </p>
@@ -60,7 +60,9 @@ export default async function CategoriesPage() {
             eyebrow={category.sourceSystem}
             title={category.name}
             description={`Identifiant source ${category.sourceId}`}
-            footer={category.isActive ? "Catégorie active" : "Catégorie inactive"}
+            footer={
+              category.isActive ? "Catégorie active" : "Catégorie inactive"
+            }
           />
         ))}
       </section>

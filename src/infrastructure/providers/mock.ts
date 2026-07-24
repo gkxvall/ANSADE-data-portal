@@ -101,7 +101,10 @@ const observations: readonly Observation[] = [
   },
 ];
 
-function applyWindow<T>(items: readonly T[], options?: CatalogueListOptions | DatasetListOptions) {
+function applyWindow<T>(
+  items: readonly T[],
+  options?: CatalogueListOptions | DatasetListOptions,
+) {
   const offset = options?.offset ?? 0;
   const limit = options?.limit ?? items.length;
   return items.slice(offset, offset + limit);

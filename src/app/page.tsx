@@ -50,9 +50,21 @@ export default async function HomePage() {
 
           <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
             {[
-              { label: "Catégories", value: statistics.categories, icon: Layers3 },
-              { label: "Jeux de données", value: statistics.datasets, icon: Database },
-              { label: "Observations", value: statistics.observations, icon: BarChart3 },
+              {
+                label: "Catégories",
+                value: statistics.categories,
+                icon: Layers3,
+              },
+              {
+                label: "Jeux de données",
+                value: statistics.datasets,
+                icon: Database,
+              },
+              {
+                label: "Observations",
+                value: statistics.observations,
+                icon: BarChart3,
+              },
             ].map(({ label, value, icon: Icon }) => (
               <div
                 key={label}
@@ -64,7 +76,9 @@ export default async function HomePage() {
                 <p className="text-navy-200 mt-4 text-xs font-semibold tracking-[0.16em] uppercase">
                   {label}
                 </p>
-                <p className="mt-1 text-2xl font-semibold">{value.toLocaleString("fr-FR")}</p>
+                <p className="mt-1 text-2xl font-semibold">
+                  {value.toLocaleString("fr-FR")}
+                </p>
               </div>
             ))}
           </div>
@@ -122,7 +136,10 @@ export default async function HomePage() {
               Catégories mises en avant
             </h2>
           </div>
-          <Link className="text-brand-700 text-sm font-semibold" href="/categories">
+          <Link
+            className="text-brand-700 text-sm font-semibold"
+            href="/categories"
+          >
             Voir toutes les catégories
           </Link>
         </div>
@@ -154,7 +171,10 @@ export default async function HomePage() {
               Jeux de données récents
             </h2>
           </div>
-          <Link className="text-brand-700 text-sm font-semibold" href="/datasets">
+          <Link
+            className="text-brand-700 text-sm font-semibold"
+            href="/datasets"
+          >
             Ouvrir le catalogue
           </Link>
         </div>

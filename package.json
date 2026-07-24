@@ -27,7 +27,8 @@
     "prisma:validate": "prisma validate",
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:seed": "prisma db seed",
-    "import:stage3": "tsx src/infrastructure/importers/stage-3/run.ts"
+    "import:stage3": "tsx src/infrastructure/importers/stage-3/run.ts",
+    "import:portal": "tsx src/infrastructure/importers/portal/run.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",

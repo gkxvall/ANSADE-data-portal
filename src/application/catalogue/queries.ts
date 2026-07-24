@@ -62,7 +62,9 @@ function normalizeSortDirection(
   return sortDirection === "desc" ? "desc" : "asc";
 }
 
-function normalizeSortBy(sortBy: string | undefined): NonNullable<DatasetListOptions["sortBy"]> {
+function normalizeSortBy(
+  sortBy: string | undefined,
+): NonNullable<DatasetListOptions["sortBy"]> {
   switch (sortBy) {
     case "updatedAt":
     case "publishedAt":
@@ -78,7 +80,11 @@ export async function getCatalogueHomeModel(): Promise<CatalogueHomeModel> {
   const [statistics, categories, featuredDatasets] = await Promise.all([
     provider.statistics.getStatistics(),
     provider.categories.listCategories({ limit: 6, sortBy: "displayOrder" }),
-    provider.datasets.listDatasets({ limit: 6, sortBy: "updatedAt", sortDirection: "desc" }),
+    provider.datasets.listDatasets({
+      limit: 6,
+      sortBy: "updatedAt",
+      sortDirection: "desc",
+    }),
   ]);
 
   return {
@@ -93,7 +99,11 @@ export async function getCategoriesPageModel(): Promise<CatalogueHomeModel> {
   const [statistics, categories, featuredDatasets] = await Promise.all([
     provider.statistics.getStatistics(),
     provider.categories.listCategories({ sortBy: "displayOrder" }),
-    provider.datasets.listDatasets({ limit: 6, sortBy: "updatedAt", sortDirection: "desc" }),
+    provider.datasets.listDatasets({
+      limit: 6,
+      sortBy: "updatedAt",
+      sortDirection: "desc",
+    }),
   ]);
 
   return {
@@ -103,13 +113,19 @@ export async function getCategoriesPageModel(): Promise<CatalogueHomeModel> {
   };
 }
 
-export async function getCategoryPageModel(slug: string): Promise<CategoryPageModel> {
+export async function getCategoryPageModel(
+  slug: string,
+): Promise<CategoryPageModel> {
   const provider = await getDataProvider();
 
   const [category, themes, datasets] = await Promise.all([
     provider.categories.getCategoryBySlug(slug),
     provider.themes.listThemes({ categorySlug: slug, sortBy: "displayOrder" }),
-    provider.datasets.listDatasets({ categorySlug: slug, sortBy: "updatedAt", sortDirection: "desc" }),
+    provider.datasets.listDatasets({
+      categorySlug: slug,
+      sortBy: "updatedAt",
+      sortDirection: "desc",
+    }),
   ]);
 
   return { category, themes, datasets };
@@ -120,7 +136,11 @@ export async function getThemePageModel(slug: string): Promise<ThemePageModel> {
 
   const [theme, datasets] = await Promise.all([
     provider.themes.getThemeBySlug(slug),
-    provider.datasets.listDatasets({ themeSlug: slug, sortBy: "updatedAt", sortDirection: "desc" }),
+    provider.datasets.listDatasets({
+      themeSlug: slug,
+      sortBy: "updatedAt",
+      sortDirection: "desc",
+    }),
   ]);
 
   return { theme, datasets };
@@ -130,13 +150,23 @@ export async function getDatasetListPageModel(
   searchParams: Readonly<Record<string, string | string[] | undefined>>,
 ): Promise<DatasetListPageModel> {
   const provider = await getDataProvider();
-  const page = normalizePage(Array.isArray(searchParams.page) ? Number(searchParams.page[0]) : Number(searchParams.page));
+  const page = normalizePage(
+    Array.isArray(searchParams.page)
+      ? Number(searchParams.page[0])
+      : Number(searchParams.page),
+  );
   const pageSize = 12;
-  const sortBy = normalizeSortBy(Array.isArray(searchParams.sort) ? searchParams.sort[0] : searchParams.sort);
-  const sortDirection = normalizeSortDirection(Array.isArray(searchParams.dir) ? searchParams.dir[0] : searchParams.dir);
+  const sortBy = normalizeSortBy(
+    Array.isArray(searchParams.sort) ? searchParams.sort[0] : searchParams.sort,
+  );
+  const sortDirection = normalizeSortDirection(
+    Array.isArray(searchParams.dir) ? searchParams.dir[0] : searchParams.dir,
+  );
   const query = typeof searchParams.q === "string" ? searchParams.q.trim() : "";
-  const categorySlug = typeof searchParams.category === "string" ? searchParams.category : null;
-  const themeSlug = typeof searchParams.theme === "string" ? searchParams.theme : null;
+  const categorySlug =
+    typeof searchParams.category === "string" ? searchParams.category : null;
+  const themeSlug =
+    typeof searchParams.theme === "string" ? searchParams.theme : null;
 
   const datasets = await provider.datasets.listDatasets({
     query: query || undefined,
@@ -163,11 +193,15 @@ export async function getDatasetListPageModel(
   };
 }
 
-export async function getDatasetPageModel(slug: string): Promise<DatasetPageModel> {
+export async function getDatasetPageModel(
+  slug: string,
+): Promise<DatasetPageModel> {
   const provider = await getDataProvider();
   const dataset = await provider.datasets.getDatasetBySlug(slug);
   const observations = dataset
-    ? await provider.observations.listObservationsByDatasetId(dataset.id, { limit: 500 })
+    ? await provider.observations.listObservationsByDatasetId(dataset.id, {
+        limit: 500,
+      })
     : [];
   const relatedDatasets = dataset
     ? await provider.datasets.listDatasets({
@@ -190,7 +224,11 @@ export async function getSearchPageModel(
 ): Promise<SearchPageModel> {
   const provider = await getDataProvider();
   const query = typeof searchParams.q === "string" ? searchParams.q.trim() : "";
-  const page = normalizePage(Array.isArray(searchParams.page) ? Number(searchParams.page[0]) : Number(searchParams.page));
+  const page = normalizePage(
+    Array.isArray(searchParams.page)
+      ? Number(searchParams.page[0])
+      : Number(searchParams.page),
+  );
   const pageSize = 9;
   const results = await provider.search.searchCatalog(query, {
     limit: pageSize + 1,

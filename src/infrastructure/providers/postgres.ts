@@ -176,7 +176,9 @@ function toMetadata(record: unknown): DatasetMetadata | null {
     sourceUpdatedAt:
       values.sourceUpdatedAt instanceof Date ? values.sourceUpdatedAt : null,
     sourcePublishedAt:
-      values.sourcePublishedAt instanceof Date ? values.sourcePublishedAt : null,
+      values.sourcePublishedAt instanceof Date
+        ? values.sourcePublishedAt
+        : null,
     createdAt: values.createdAt instanceof Date ? values.createdAt : new Date(),
     updatedAt: values.updatedAt instanceof Date ? values.updatedAt : new Date(),
   };
@@ -197,7 +199,9 @@ function toDatasetDetail(record: DatasetWithDetailRelations): DatasetDetail {
   };
 }
 
-function buildDatasetWhere(options?: DatasetListOptions): Prisma.DatasetWhereInput {
+function buildDatasetWhere(
+  options?: DatasetListOptions,
+): Prisma.DatasetWhereInput {
   const query = options?.query?.trim();
 
   return {
@@ -441,7 +445,9 @@ export function createPostgresDataProvider(prisma: PrismaClient): DataProvider {
                 skip: options.offset,
                 take: options.limit,
               })
-              .then((themes) => themes.map((theme) => toThemeCatalogueItem(theme))),
+              .then((themes) =>
+                themes.map((theme) => toThemeCatalogueItem(theme)),
+              ),
             datasets: await listDatasets(prisma, options),
           } satisfies CatalogueSearchResults;
         }
@@ -465,7 +471,10 @@ export function createPostgresDataProvider(prisma: PrismaClient): DataProvider {
                   {
                     category: {
                       is: {
-                        name: { contains: normalizedQuery, mode: "insensitive" },
+                        name: {
+                          contains: normalizedQuery,
+                          mode: "insensitive",
+                        },
                       },
                     },
                   },
@@ -474,27 +483,39 @@ export function createPostgresDataProvider(prisma: PrismaClient): DataProvider {
               include: { category: true },
               orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
             })
-            .then((themes) => themes.map((theme) => toThemeCatalogueItem(theme))),
+            .then((themes) =>
+              themes.map((theme) => toThemeCatalogueItem(theme)),
+            ),
           listDatasets(prisma, {
             ...options,
             query: normalizedQuery,
           }),
         ]);
 
-        return { categories, themes, datasets } satisfies CatalogueSearchResults;
+        return {
+          categories,
+          themes,
+          datasets,
+        } satisfies CatalogueSearchResults;
       },
     },
     statistics: {
       async getStatistics() {
-        const [categories, themes, datasets, observations, activeDatasets, publishedDatasets] =
-          await Promise.all([
-            prisma.category.count(),
-            prisma.theme.count(),
-            prisma.dataset.count(),
-            prisma.observation.count(),
-            prisma.dataset.count({ where: { isActive: true } }),
-            prisma.dataset.count({ where: { publicationStatus: "PUBLISHED" } }),
-          ]);
+        const [
+          categories,
+          themes,
+          datasets,
+          observations,
+          activeDatasets,
+          publishedDatasets,
+        ] = await Promise.all([
+          prisma.category.count(),
+          prisma.theme.count(),
+          prisma.dataset.count(),
+          prisma.observation.count(),
+          prisma.dataset.count({ where: { isActive: true } }),
+          prisma.dataset.count({ where: { publicationStatus: "PUBLISHED" } }),
+        ]);
 
         const statistics: CatalogueStatistics = {
           categories,

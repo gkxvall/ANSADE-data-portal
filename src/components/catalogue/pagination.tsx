@@ -35,20 +35,25 @@ export function PaginationControls({
   readonly basePath: string;
   readonly page: number;
   readonly hasMore: boolean;
-  readonly searchParams: Readonly<Record<string, string | string[] | undefined>>;
+  readonly searchParams: Readonly<
+    Record<string, string | string[] | undefined>
+  >;
 }) {
   if (page <= 1 && !hasMore) {
     return null;
   }
 
   return (
-    <nav aria-label="Pagination" className="flex items-center justify-between gap-3">
+    <nav
+      aria-label="Pagination"
+      className="flex items-center justify-between gap-3"
+    >
       <div className="text-navy-500 text-sm">Page {page}</div>
       <div className="flex items-center gap-2">
         {page > 1 ? (
           <Link
             href={buildHref(basePath, searchParams, page - 1)}
-            className="rounded-full border border-sand-200 bg-white px-4 py-2 text-sm font-semibold text-navy-800"
+            className="border-sand-200 text-navy-800 rounded-full border bg-white px-4 py-2 text-sm font-semibold"
           >
             Précédent
           </Link>

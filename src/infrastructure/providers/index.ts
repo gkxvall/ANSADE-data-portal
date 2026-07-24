@@ -13,7 +13,9 @@ async function loadPostgresProvider() {
   return createPostgresDataProvider(prisma);
 }
 
-export function createDataProviderFromEnv(environment: ServerEnv): Promise<DataProvider> {
+export function createDataProviderFromEnv(
+  environment: ServerEnv,
+): Promise<DataProvider> {
   switch (environment.DATA_SOURCE as ProviderName) {
     case "api":
       return Promise.resolve(createApiDataProvider());
@@ -25,9 +27,15 @@ export function createDataProviderFromEnv(environment: ServerEnv): Promise<DataP
   }
 }
 
-export async function getDataProvider(environment = process.env): Promise<DataProvider> {
+export async function getDataProvider(
+  environment = process.env,
+): Promise<DataProvider> {
   return createDataProviderFromEnv(getServerEnv(environment));
 }
 
-export { createApiDataProvider, createMockDataProvider, createPostgresDataProvider };
+export {
+  createApiDataProvider,
+  createMockDataProvider,
+  createPostgresDataProvider,
+};
 export type { DataProvider, ProviderName };

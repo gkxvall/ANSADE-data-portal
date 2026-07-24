@@ -1,8 +1,5 @@
 import type { Category } from "../entities";
-import type {
-  DatasetCatalogueItem,
-  ThemeCatalogueItem,
-} from "./catalogue";
+import type { DatasetCatalogueItem, ThemeCatalogueItem } from "./catalogue";
 
 export interface CatalogueSearchResults {
   readonly categories: readonly Category[];

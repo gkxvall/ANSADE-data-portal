@@ -55,7 +55,7 @@ export function RecentlyViewedDatasets({
 
   if (recentDatasets.length === 0) {
     return (
-      <div className="rounded-card border-navy-100 bg-white p-5 text-sm text-navy-500 shadow-card border">
+      <div className="rounded-card border-navy-100 text-navy-500 shadow-card border bg-white p-5 text-sm">
         Aucun jeu de données consulté récemment.
       </div>
     );

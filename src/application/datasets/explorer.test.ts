@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { developmentFixture } from "../../../prisma/fixtures/development";
 
-import { buildChartModel, buildExplorerState, filterObservations, serializeDatasetExplorerData } from "./explorer";
+import {
+  buildChartModel,
+  buildExplorerState,
+  filterObservations,
+  serializeDatasetExplorerData,
+} from "./explorer";
 
 describe("dataset explorer helpers", () => {
   const dataset = {
@@ -45,24 +50,42 @@ describe("dataset explorer helpers", () => {
   ] as const;
 
   it("serializes dataset explorer data with dimension options", () => {
-    const data = serializeDatasetExplorerData(dataset as never, observations as never, []);
+    const data = serializeDatasetExplorerData(
+      dataset as never,
+      observations as never,
+      [],
+    );
 
     expect(data.dimensions[0].values).toContain("dev-period");
     expect(data.dataset.title).toContain("démonstration");
   });
 
   it("filters observations by search text", () => {
-    const state = buildExplorerState({ q: "dev-period" }, [{ key: "period", label: "Période", kind: "TIME", values: ["dev-period"] }]);
-    const data = serializeDatasetExplorerData(dataset as never, observations as never, []);
+    const state = buildExplorerState({ q: "dev-period" }, [
+      { key: "period", label: "Période", kind: "TIME", values: ["dev-period"] },
+    ]);
+    const data = serializeDatasetExplorerData(
+      dataset as never,
+      observations as never,
+      [],
+    );
 
     expect(filterObservations(data.observations, state)).toHaveLength(1);
   });
 
   it("builds a kpi chart model", () => {
-    const state = buildExplorerState({}, [{ key: "period", label: "Période", kind: "TIME", values: ["dev-period"] }]);
-    const data = serializeDatasetExplorerData(dataset as never, observations as never, []);
+    const state = buildExplorerState({}, [
+      { key: "period", label: "Période", kind: "TIME", values: ["dev-period"] },
+    ]);
+    const data = serializeDatasetExplorerData(
+      dataset as never,
+      observations as never,
+      [],
+    );
 
-    expect(buildChartModel(data.observations, { ...state, chartType: "kpi" })).toMatchObject({
+    expect(
+      buildChartModel(data.observations, { ...state, chartType: "kpi" }),
+    ).toMatchObject({
       available: true,
     });
   });

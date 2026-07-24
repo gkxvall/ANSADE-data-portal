@@ -49,12 +49,16 @@ export interface CategoryRepository {
 }
 
 export interface ThemeRepository {
-  listThemes(options?: CatalogueListOptions & { categorySlug?: string }): Promise<readonly ThemeCatalogueItem[]>;
+  listThemes(
+    options?: CatalogueListOptions & { categorySlug?: string },
+  ): Promise<readonly ThemeCatalogueItem[]>;
   getThemeBySlug(slug: string): Promise<ThemeCatalogueItem | null>;
 }
 
 export interface DatasetRepository {
-  listDatasets(options?: DatasetListOptions): Promise<readonly DatasetCatalogueItem[]>;
+  listDatasets(
+    options?: DatasetListOptions,
+  ): Promise<readonly DatasetCatalogueItem[]>;
   getDatasetBySlug(slug: string): Promise<DatasetDetail | null>;
 }
 
