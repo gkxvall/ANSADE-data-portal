@@ -41,6 +41,7 @@ export interface DatasetListPageModel {
 
 export interface DatasetPageModel {
   readonly dataset: DatasetDetail | null;
+  readonly observations: readonly import("@/domain/entities").Observation[];
   readonly relatedDatasets: readonly DatasetCatalogueItem[];
 }
 
@@ -165,6 +166,9 @@ export async function getDatasetListPageModel(
 export async function getDatasetPageModel(slug: string): Promise<DatasetPageModel> {
   const provider = await getDataProvider();
   const dataset = await provider.datasets.getDatasetBySlug(slug);
+  const observations = dataset
+    ? await provider.observations.listObservationsByDatasetId(dataset.id, { limit: 500 })
+    : [];
   const relatedDatasets = dataset
     ? await provider.datasets.listDatasets({
         themeSlug: dataset.themeSlug,
@@ -176,6 +180,7 @@ export async function getDatasetPageModel(slug: string): Promise<DatasetPageMode
 
   return {
     dataset,
+    observations,
     relatedDatasets: relatedDatasets.filter((entry) => entry.slug !== slug),
   };
 }

@@ -4,7 +4,7 @@ A modern statistical data exploration platform for ANSADE, built with Next.js, T
 
 The project is designed to import, normalize, store, and eventually visualize ANSADE statistical datasets while keeping the application independent from any one source format. The frontend is intended to work with PostgreSQL today and transition later to a live ANSADE API provider without requiring major changes to the user interface.
 
-> **Current status:** the project foundation, normalized database model, Stage 3 sample import pipeline, Stage 4 provider abstraction, and Stage 5 catalogue/search pages are implemented. The importer still uses a checked-in sample source rather than a live ANSADE export, but the UI now reads catalog data through repository services instead of importing Prisma directly.
+> **Current status:** the project foundation, normalized database model, Stage 3 sample import pipeline, Stage 4 provider abstraction, Stage 5 catalogue/search pages, Stage 6 dataset explorer, and Stage 7 chart/comparison workspace are implemented. The importer still uses a checked-in sample source rather than a live ANSADE export, but the UI now reads catalog data through repository services instead of importing Prisma directly.
 
 ---
 
@@ -65,6 +65,30 @@ The UI now includes:
 - a dataset detail page;
 - a global search page;
 - breadcrumbs and recently viewed datasets.
+
+### Dataset explorer
+
+The dataset detail page now includes an interactive explorer with:
+
+- dynamic dimension filters derived from the loaded dataset;
+- URL-synced search, sort, pagination, and chart state;
+- hide/show dimension columns;
+- raw-value fallbacks and data-quality labels;
+- a comparison workspace;
+- browser-side SVG and PNG summary export.
+
+### Visualizations and comparisons
+
+The explorer now renders reusable chart panels for:
+
+- bar charts;
+- line charts;
+- area charts;
+- pie charts;
+- scatter charts when the selected axes are numeric;
+- KPI cards.
+
+The chart view and table stay synchronized through the same filtered observation set.
 
 ### Database foundation
 
@@ -179,16 +203,14 @@ Some sample records are intentionally incomplete or invalid so the importer can 
 
 ## Current frontend behavior
 
-The frontend now renders a working catalogue surface.
+The frontend now renders a working catalogue surface and an interactive dataset explorer.
 
 It currently does not yet:
 
-- render the interactive dataset explorer from Stage 6;
-- show charts or comparisons from normalized observations;
-- provide exports or saved views;
+- provide persisted saved views or favorites;
 - expose admin import monitoring.
 
-Running the importer populates PostgreSQL, and the browse pages now display imported catalogue records through repository services.
+Running the importer populates PostgreSQL, and the browse pages now display imported catalogue records through repository services. The dataset detail page also renders filters, charts, comparison cards, and browser-side export actions.
 
 The runtime is currently:
 
@@ -201,7 +223,7 @@ PostgreSQL repository
     ↓
 Application query helpers
     ↓
-Catalogue and search pages
+Catalogue, search, and dataset explorer pages
 ```
 
 ---

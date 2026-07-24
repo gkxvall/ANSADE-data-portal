@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 
 import { getDatasetPageModel } from "@/application/catalogue/queries";
+import { serializeDatasetExplorerData } from "@/application/datasets/explorer";
 import { CatalogueBreadcrumbs } from "@/components/catalogue/breadcrumbs";
 import { CatalogueCard } from "@/components/catalogue/catalogue-card";
-import { RecentlyViewedDatasets } from "@/components/catalogue/recently-viewed-datasets";
+import { DatasetExplorer } from "@/components/datasets/dataset-explorer";
 
 function formatDate(value: Date | null | undefined) {
   if (!value) {
@@ -18,15 +19,27 @@ function formatDate(value: Date | null | undefined) {
 
 export default async function DatasetPage({
   params,
+  searchParams,
 }: {
   readonly params: Promise<{ slug: string }>;
+  readonly searchParams: Promise<Readonly<Record<string, string | string[] | undefined>>>;
 }) {
   const { slug } = await params;
-  const { dataset, relatedDatasets } = await getDatasetPageModel(slug);
+  const [resolvedSearchParams, model] = await Promise.all([
+    searchParams,
+    getDatasetPageModel(slug),
+  ]);
+  const { dataset, observations, relatedDatasets } = model;
 
   if (!dataset) {
     notFound();
   }
+
+  const explorerData = serializeDatasetExplorerData(
+    dataset,
+    observations,
+    relatedDatasets,
+  );
 
   return (
     <div className="mx-auto flex w-full max-w-[90rem] flex-col gap-8 p-4 sm:p-6 lg:p-8">
@@ -85,65 +98,7 @@ export default async function DatasetPage({
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(18rem,0.85fr)]">
-        <div className="rounded-[1.5rem] border border-sand-100 bg-white p-6 shadow-card">
-          <h2 className="text-navy-900 text-xl font-semibold">Aperçu des observations</h2>
-          <div className="mt-4 overflow-hidden rounded-[1rem] border border-sand-100">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-sand-50 text-navy-600">
-                <tr>
-                  <th className="px-4 py-3 font-semibold">Coordinate</th>
-                  <th className="px-4 py-3 font-semibold">Valeur</th>
-                  <th className="px-4 py-3 font-semibold">Statut</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dataset.sampleObservations.map((observation) => (
-                  <tr key={observation.id} className="border-t border-sand-100">
-                    <td className="px-4 py-3 align-top text-navy-700">
-                      {Object.entries(observation.coordinate)
-                        .map(([key, value]) => `${key}: ${value}`)
-                        .join(" · ")}
-                    </td>
-                    <td className="px-4 py-3 align-top text-navy-700">
-                      {observation.value ?? observation.rawValue ?? "N/D"}
-                    </td>
-                    <td className="px-4 py-3 align-top text-navy-700">
-                      {observation.status ?? "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="rounded-[1.5rem] border border-sand-100 bg-white p-6 shadow-card">
-            <h2 className="text-navy-900 text-xl font-semibold">Dimensions</h2>
-            <ul className="mt-4 space-y-3 text-sm text-navy-700">
-              {dataset.dimensions.map((dimension) => (
-                <li key={dimension.id} className="rounded-xl bg-sand-50 px-4 py-3">
-                  <p className="font-semibold text-navy-900">{dimension.label}</p>
-                  <p className="mt-1 text-xs uppercase tracking-[0.14em] text-navy-500">
-                    {dimension.kind} · {dimension.key}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="rounded-[1.5rem] border border-sand-100 bg-white p-6 shadow-card">
-            <h2 className="text-navy-900 text-xl font-semibold">Consultés récemment</h2>
-            <div className="mt-4">
-              <RecentlyViewedDatasets
-                currentDatasetSlug={dataset.slug}
-                datasets={[dataset, ...relatedDatasets]}
-              />
-            </div>
-          </div>
-        </div>
-      </section>
+      <DatasetExplorer data={explorerData} searchParams={resolvedSearchParams} />
 
       {relatedDatasets.length > 0 ? (
         <section className="space-y-4">
